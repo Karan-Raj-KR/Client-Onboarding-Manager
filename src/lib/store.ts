@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase';
 import { KagazState, Deal, Quote, Invoice, Enquiry, Payment, Reminder, DEFAULT_STATE, paiseToRupee, formatINR } from './schema';
 
 export * from './schema';
@@ -15,11 +16,70 @@ export async function fetchKagazState() {
     const res = await fetch('/api/state');
     if (res.ok) {
       memoryState = await res.json();
-      notify();
     }
   } catch (e) {
     console.error('Failed to fetch state from API', e);
   }
+
+  try {
+    const supabase = createClient();
+    const { data: deals, error } = await supabase.from('deals').select('*');
+    
+    if (error) {
+      console.warn('Supabase fetch failed during initialization', error);
+    } else if (deals && Array.isArray(deals)) {
+      const localDealIds = new Set(memoryState.deals.map(d => d.id));
+      
+      const newDeals: Deal[] = [];
+      const newQuotes: Quote[] = [];
+      const newInvoices: Invoice[] = [];
+      const newPayments: Payment[] = [];
+      const newReminders: Reminder[] = [];
+      
+      deals.forEach((row: any) => {
+        if (!localDealIds.has(row.id)) {
+          const dealData = row.data || {};
+          
+          const reconstructedDeal: Deal = {
+            id: row.id,
+            project_title: row.project_title,
+            client_name: row.client_name,
+            client_phone: row.client_phone,
+            scope_summary: row.scope_summary,
+            timeline_days: row.timeline_days,
+            budget_min_paise: row.budget_min_paise,
+            budget_max_paise: row.budget_max_paise,
+            missing_information: row.missing_information,
+            confidence_bps: row.confidence_bps,
+            status: row.status,
+            created_at: row.created_at,
+            enquiry_id: dealData.enquiry_id || null,
+            notes: dealData.notes || null,
+            line_items: dealData.line_items || [],
+          };
+          
+          newDeals.push(reconstructedDeal);
+          if (Array.isArray(dealData.quotes)) newQuotes.push(...dealData.quotes);
+          if (Array.isArray(dealData.invoices)) newInvoices.push(...dealData.invoices);
+          if (Array.isArray(dealData.payments)) newPayments.push(...dealData.payments);
+          if (Array.isArray(dealData.reminders)) newReminders.push(...dealData.reminders);
+        }
+      });
+      
+      memoryState = {
+        ...memoryState,
+        deals: [...memoryState.deals, ...newDeals].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        quotes: [...memoryState.quotes, ...newQuotes],
+        invoices: [...memoryState.invoices, ...newInvoices],
+        payments: [...memoryState.payments, ...newPayments],
+        reminders: [...memoryState.reminders, ...newReminders],
+      };
+    }
+  } catch (e) {
+    console.warn('Failed to hydrate from Supabase', e);
+  }
+
+  notify();
 }
 
 export async function saveKagazState(state: KagazState) {
@@ -39,6 +99,56 @@ export async function saveKagazState(state: KagazState) {
 
 export function resetKagazStore() {
   saveKagazState(DEFAULT_STATE);
+}
+
+export async function syncDealToSupabase(dealId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const state = getKagazState();
+    const deal = state.deals.find(d => d.id === dealId);
+    if (!deal) return;
+
+    const quotes = state.quotes.filter(q => q.deal_id === dealId);
+    const quoteIds = quotes.map(q => q.id);
+    const invoices = state.invoices.filter(i => quoteIds.includes(i.quote_id));
+    const invoiceIds = invoices.map(i => i.id);
+    const payments = state.payments.filter(p => invoiceIds.includes(p.invoice_id));
+    const reminders = state.reminders.filter(r => invoiceIds.includes(r.invoice_id));
+
+    const payload = {
+      id: deal.id,
+      project_title: deal.project_title,
+      client_name: deal.client_name,
+      client_phone: deal.client_phone,
+      scope_summary: deal.scope_summary,
+      timeline_days: deal.timeline_days,
+      budget_min_paise: deal.budget_min_paise,
+      budget_max_paise: deal.budget_max_paise,
+      missing_information: deal.missing_information,
+      confidence_bps: deal.confidence_bps,
+      status: deal.status,
+      created_at: deal.created_at,
+      data: {
+        enquiry_id: deal.enquiry_id,
+        notes: deal.notes,
+        line_items: deal.line_items,
+        quotes,
+        invoices,
+        payments,
+        reminders
+      }
+    };
+
+    const supabase = createClient();
+    supabase.from('deals').upsert(payload).then(
+      ({ error }) => {
+        if (error) console.warn('Supabase sync failed (upsert returned error)', error);
+      },
+      (err) => console.warn('Supabase sync failed', err)
+    );
+  } catch (err) {
+    console.warn('Supabase sync exception', err);
+  }
 }
 
 // === OBSERVER PATTERN FOR REACT SYNCHRONIZATION ===
@@ -189,6 +299,8 @@ export async function extractDealWithAI(dealId: string): Promise<Deal | null> {
     deals: newDeals,
   });
 
+  syncDealToSupabase(updatedDeal.id);
+
   return updatedDeal;
 }
 
@@ -212,6 +324,8 @@ export function updateDeal(dealId: string, updates: Partial<Deal>): Deal | null 
     ...state,
     deals: newDeals,
   });
+
+  syncDealToSupabase(updatedDeal.id);
 
   return updatedDeal;
 }
@@ -272,6 +386,8 @@ export function generateQuote(
     quotes: [...state.quotes, newQuote],
     deals: updatedDeals,
   });
+
+  syncDealToSupabase(dealId);
 
   return newQuote;
 }
@@ -374,6 +490,8 @@ export function acceptQuote(publicToken: string, acceptedByName: string): {
     reminders: [...state.reminders, newReminder],
   });
 
+  syncDealToSupabase(quote.deal_id);
+
   return {
     quote: updatedQuote,
     invoice: newInvoice,
@@ -427,6 +545,10 @@ export function simulatePayment(invoiceId: string): Invoice | null {
     reminders: updatedReminders,
   });
 
+  if (quote?.deal_id) {
+    syncDealToSupabase(quote.deal_id);
+  }
+
   return updatedInvoice;
 }
 
@@ -463,6 +585,8 @@ export const api = {
       ...state,
       deals: [newDeal, ...state.deals],
     });
+
+    syncDealToSupabase(newDealId);
 
     return { enquiry: newEnquiry, deal: newDeal };
   },
