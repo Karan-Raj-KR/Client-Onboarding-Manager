@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Force this route to run per-request on the Node runtime, never prerendered at build time.
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +12,13 @@ export async function POST(request: Request) {
     if (!to || !quoteUrl) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ error: 'missing key' }, { status: 500 });
+    }
+
+    // Instantiate lazily so the client is only constructed when a request comes in, not during build.
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
       from: `${brandName || 'Kagaz'} <onboarding@resend.dev>`,

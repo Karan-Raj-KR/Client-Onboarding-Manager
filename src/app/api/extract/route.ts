@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// We instantiate lazily to prevent Vercel build errors if the API key isn't set during build
+// Force this route to run per-request on the Node runtime, never prerendered at build time.
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// Instantiate lazily so the client is only constructed when a request comes in, not during build.
 function getOpenAIClient() {
   return new OpenAI({
     baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY || 'dummy-key-to-bypass-build-check',
+    apiKey: process.env.NVIDIA_API_KEY,
   });
 }
 
@@ -45,6 +49,10 @@ export async function POST(request: Request) {
 
     if (!rawText) {
       return NextResponse.json({ ok: false, error: 'Missing rawText in request body' }, { status: 400 });
+    }
+
+    if (!process.env.NVIDIA_API_KEY) {
+      return NextResponse.json({ ok: false, error: 'missing key' }, { status: 500 });
     }
 
     const openai = getOpenAIClient();
