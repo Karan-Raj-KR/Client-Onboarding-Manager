@@ -26,7 +26,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-background">
       {/* Floating Glass Header */}
-      <div className="sticky top-4 z-40 px-4 mb-6 flex justify-center no-print w-full pointer-events-none">
+      <div className="relative pt-4 z-40 px-4 mb-6 flex justify-center no-print w-full pointer-events-none">
         <header className="w-full max-w-5xl glass rounded-full px-6 py-3 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.06)] pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center space-x-3">
             <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
