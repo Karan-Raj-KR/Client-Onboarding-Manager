@@ -31,7 +31,7 @@ import {
   formatINR,
 } from './store';
 
-function runTests() {
+async function runTests() {
   console.log('🧪 Starting Kagaz Core Logic Tests...\n');
 
   // Test 1: Currency Conversion
@@ -70,7 +70,7 @@ function runTests() {
   if (!demoDeal) throw new Error('Demo deal dl_demo not found');
   if (demoDeal.status !== 'New') throw new Error('Demo deal should start as status: New');
 
-  const extracted = extractDealWithAI('dl_demo');
+  const extracted = await extractDealWithAI('dl_demo');
   if (!extracted || extracted.status !== 'Draft') throw new Error('AI Extraction failed to set status Draft');
   if (extracted.line_items.length === 0) throw new Error('AI Extraction should populate line items');
   console.log('✅ AI Extraction flow passed.');
