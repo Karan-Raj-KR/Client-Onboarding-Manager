@@ -13,3 +13,5 @@ build/
 # API keys and certs
 *.pem
 .env.local
+
+db.json
