@@ -117,7 +117,16 @@ export default function InboxPage() {
 
   return (
     <OwnerShell>
-      <div className="flex-1 flex glass rounded-3xl overflow-hidden min-h-[600px] shadow-sm animate-in slide-in-from-bottom-8 duration-700 mb-8">
+      <div className="flex-1 flex flex-col bg-background rounded-xl overflow-hidden min-h-[600px] shadow-2xl border border-border/60 animate-in slide-in-from-bottom-8 duration-700 mb-8">
+        
+        {/* MacOS Window Header */}
+        <div className="h-10 bg-neutral-100/50 border-b border-border/50 flex items-center px-4 space-x-2 shrink-0">
+          <div className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]"></div>
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]"></div>
+          <div className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]"></div>
+        </div>
+        
+        <div className="flex-1 flex overflow-hidden">
         
         {/* Left Side: Chats List */}
         <div className={`w-full md:w-80 border-r border-border/50 bg-white/40 flex flex-col ${
@@ -192,7 +201,7 @@ export default function InboxPage() {
           </div>
 
           {/* Messages Stream */}
-          <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-end bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat bg-[size:350px] opacity-90">
+          <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 flex flex-col justify-end bg-neutral-50/50">
             
             {activeChat !== 'demo' ? (
               <div className="mx-auto glass rounded-full px-6 py-2 text-[11px] font-bold text-muted-foreground text-center max-w-xs shadow-sm">
@@ -258,9 +267,9 @@ export default function InboxPage() {
                 </div>
 
                 {/* AI Action Box in Stream */}
-                <div className="mx-auto w-full max-w-sm glass border border-white/40 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.06)] space-y-4 my-6 hover-lift">
+                <div className="mx-auto w-full max-w-sm bg-white border border-border/50 rounded-2xl p-5 shadow-sm space-y-4 my-6">
                   <div className="flex items-center space-x-2">
-                    <div className="p-1.5 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-sm">
+                    <div className="p-1.5 bg-neutral-900 rounded-lg shadow-sm">
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
                     <h4 className="font-black text-xs uppercase tracking-wider text-foreground">Kagaz AI</h4>
@@ -271,7 +280,7 @@ export default function InboxPage() {
                   <button
                     onClick={handleAIProcess}
                     disabled={isExtracting}
-                    className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xs font-bold rounded-xl transition-all shadow-[0_4px_14px_0_rgb(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] relative overflow-hidden animate-shimmer bg-[length:200%_auto] disabled:opacity-50 disabled:animate-none"
+                    className="w-full flex items-center justify-center space-x-2 py-3 px-4 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm disabled:opacity-50"
                   >
                     {isExtracting ? (
                       <>
@@ -341,6 +350,7 @@ export default function InboxPage() {
           </div>
         )}
 
+        </div>
       </div>
     </OwnerShell>
   );
