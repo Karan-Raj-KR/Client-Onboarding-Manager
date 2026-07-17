@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Inbox, CreditCard, Settings, RefreshCw } from 'lucide-react';
 import { useKagazStore, resetKagazStore, formatINRPaise, api } from '@/lib/store';
-import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs';
 
 export default function OwnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -59,20 +58,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
               <RefreshCw className="w-4 h-4" />
             </button>
 
-            {/* Clerk Auth Controls */}
-            <Show when="signed-out">
-              <div className="flex items-center space-x-2 text-xs font-bold">
-                <SignInButton mode="modal">
-                  <button className="px-3 py-1.5 hover:bg-neutral-100 text-neutral-600 rounded-full transition-colors">Sign In</button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="px-3 py-1.5 bg-neutral-900 text-white hover:bg-neutral-800 rounded-full transition-colors shadow-sm">Sign Up</button>
-                </SignUpButton>
-              </div>
-            </Show>
-            <Show when="signed-in">
-              <UserButton appearance={{ elements: { userButtonAvatarBox: 'w-8 h-8 shadow-sm' } }} />
-            </Show>
+
           </div>
         </header>
       </div>
