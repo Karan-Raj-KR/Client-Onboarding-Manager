@@ -162,6 +162,26 @@ export default function ClientAcceptPage() {
               <span className="text-xl text-neutral-900">{formatINRPaise(quote.total_paise, true)}</span>
             </div>
           </div>
+          
+          {/* Signatures */}
+          <div className="border-t-2 border-border/60 pt-5 mt-5">
+            <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Digital Signatures</h5>
+            <div className="flex justify-between items-end gap-4">
+              <div className="flex-1">
+                <div className="h-12 border-b border-border mb-1 relative flex items-end pb-1 overflow-hidden">
+                  <input type="text" readOnly defaultValue={state.business.brand_name} className="w-full bg-transparent outline-none text-foreground font-signature text-xl" />
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">{state.business.brand_name}</p>
+              </div>
+              
+              <div className="flex-1 text-right">
+                <div className="h-12 border-b border-border mb-1 relative">
+                  <input type="text" placeholder="Type signature..." defaultValue={deal.client_name} className="w-full h-full flex items-end pb-1 bg-transparent outline-none text-foreground font-signature text-xl text-right placeholder:text-muted-foreground/50 placeholder:font-sans placeholder:text-[10px]" />
+                </div>
+                <p className="text-[9px] font-bold text-muted-foreground uppercase">{deal.client_name}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Accept Button Footer */}
