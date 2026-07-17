@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ShieldCheck, Calendar, Clock, CheckCircle2, Loader2, FileCheck } from 'lucide-react';
-import { useKagazStore, acceptQuote, formatINRPaise } from '@/lib/store';
+import { ShieldCheck, Calendar, Clock, CheckCircle2, Loader2, FileCheck, FileText, Printer, ArrowRight, AlertCircle } from 'lucide-react';
+import { useKagazStore, acceptQuote, tailorDocumentsForDeal, formatINRPaise } from '@/lib/store';
 
 export default function ClientAcceptPage() {
   const params = useParams();
@@ -19,24 +19,30 @@ export default function ClientAcceptPage() {
   // Animation cascade state
   const [isAccepting, setIsAccepting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [acceptResult, setAcceptResult] = useState<{ invoiceId: string } | null>(null);
+  const [isTailoring, setIsTailoring] = useState(false);
 
   const steps = [
     'Quotation accepted',
     'Generating GST-ready invoice...',
     'Creating payment link...',
     'Arming reminders...',
+    'Tailoring your documents...',
   ];
 
-  // If quote is already accepted, check if there's an invoice and direct to it
+  // If quote is already accepted and has documents ready, show confirmation view
+  const isAlreadyAccepted = quote && (quote.status === 'Accepted' || quote.accepted_at);
+  const hasDocuments = deal?.tailored_documents && deal.tailored_documents.length > 0;
+  const documentsReady = deal?.tailored_documents?.every((d) => d.status === 'ready' || d.status === 'failed');
+  const invoice = isAlreadyAccepted ? state.invoices.find((i) => i.quote_id === quote?.id) : null;
+
+  // Kick off tailoring for already-accepted deals that don't have documents yet
   useEffect(() => {
-    if (quote && quote.status === 'Accepted') {
-      const invoice = state.invoices.find((i) => i.quote_id === quote.id);
-      if (invoice) {
-        // Redirect directly without animation if already accepted
-        router.push(`/pay/${invoice.id}`);
-      }
+    if (isAlreadyAccepted && deal && !hasDocuments && !isTailoring) {
+      setIsTailoring(true);
+      tailorDocumentsForDeal(deal.id).finally(() => setIsTailoring(false));
     }
-  }, [quote, state.invoices, router]);
+  }, [isAlreadyAccepted, deal, hasDocuments, isTailoring]);
 
   if (!quote || !deal) {
     return (
@@ -59,24 +65,189 @@ export default function ClientAcceptPage() {
       setCurrentStep((prev) => {
         if (prev >= steps.length - 1) {
           clearInterval(interval);
-          
-          // Trigger the atomic accept transaction
-          const result = acceptQuote(token, deal.client_name);
-          
-          // Redirect to client payment page
-          setTimeout(() => {
-            if (result) {
-              router.push(`/pay/${result.invoice.id}`);
-            }
-          }, 800);
-          
           return prev;
         }
         return prev + 1;
       });
     }, 600);
+
+    // Trigger the atomic accept transaction immediately
+    const result = acceptQuote(token, deal.client_name);
+    
+    if (result) {
+      setAcceptResult({ invoiceId: result.invoice.id });
+      
+      // Fire-and-forget: tailor documents (never blocks accept)
+      setIsTailoring(true);
+      tailorDocumentsForDeal(deal.id).finally(() => {
+        setIsTailoring(false);
+      });
+    }
+
+    // After animation finishes, dismiss the modal
+    setTimeout(() => {
+      setIsAccepting(false);
+    }, steps.length * 600 + 800);
   };
 
+  // ── POST-ACCEPTANCE CONFIRMATION VIEW ──
+  if (isAlreadyAccepted || acceptResult) {
+    const invoiceId = acceptResult?.invoiceId || invoice?.id;
+
+    return (
+      <div className="min-h-screen bg-neutral-50/50 py-10 px-4 flex flex-col items-center">
+        <div className="w-full max-w-lg space-y-6 animate-in slide-in-from-bottom-8 duration-700 fade-in">
+
+          {/* Success banner */}
+          <div className="glass rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-border/40 overflow-hidden">
+            <div className="bg-emerald-600 p-8 text-white text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
+              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 relative z-10" />
+              <h1 className="relative z-10 text-2xl font-black tracking-tighter">Quotation Accepted!</h1>
+              <p className="relative z-10 text-sm font-medium text-emerald-100 mt-1">Thank you, {deal.client_name}</p>
+            </div>
+
+            <div className="p-6 space-y-4 bg-white">
+              <div className="bg-neutral-50 rounded-2xl p-4 border border-border/50 space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">Project</span>
+                  <span className="font-black text-foreground text-right max-w-[60%]">{deal.project_title}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">Total Value</span>
+                  <span className="font-black text-foreground">{formatINRPaise(quote.total_paise, true)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">Timeline</span>
+                  <span className="font-black text-foreground">{deal.timeline_days} Days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Your Documents section */}
+          <div className="glass rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-border/40 p-6 space-y-4">
+            <div className="flex items-center space-x-2 pb-3 border-b border-border/50">
+              <FileText className="w-5 h-5 text-neutral-800" />
+              <h3 className="font-black text-base text-foreground tracking-tight">Your Documents</h3>
+            </div>
+
+            {(!hasDocuments || !documentsReady) ? (
+              <div className="space-y-3">
+                {(state.templates || []).map((t) => {
+                  const doc = deal.tailored_documents?.find((d) => d.template_id === t.id);
+                  return (
+                    <div key={t.id} className="flex items-center justify-between p-4 bg-neutral-50 rounded-2xl border border-border/50">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white rounded-xl border border-border/50 shadow-sm">
+                          <FileText className="w-4 h-4 text-neutral-500" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-foreground">{t.name}</p>
+                          <p className="text-[11px] font-medium text-muted-foreground">
+                            {doc?.status === 'failed' ? 'Generation failed' : 'Tailoring with AI...'}
+                          </p>
+                        </div>
+                      </div>
+                      {doc?.status === 'failed' ? (
+                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                      ) : (
+                        <Loader2 className="w-5 h-5 text-neutral-400 animate-spin" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {deal.tailored_documents!.map((doc) => (
+                  <div key={doc.template_id} className="flex items-center justify-between p-4 bg-neutral-50 rounded-2xl border border-border/50">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-200/50 shadow-sm">
+                        <FileCheck className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm text-foreground">{doc.name}</p>
+                        <p className="text-[11px] font-medium text-emerald-700">
+                          {doc.status === 'ready' ? 'Tailored to your project' : 'Document unavailable'}
+                        </p>
+                      </div>
+                    </div>
+                    {doc.status === 'ready' ? (
+                      <button
+                        onClick={() => router.push(`/documents/${deal.id}/${doc.template_id}`)}
+                        className="inline-flex items-center space-x-1.5 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded-full transition-all shadow-sm active:scale-95"
+                      >
+                        <span>View</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground">Unavailable</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Proceed to payment button */}
+          {invoiceId && (
+            <button
+              onClick={() => router.push(`/pay/${invoiceId}`)}
+              className="w-full py-4 px-6 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-2xl transition-all shadow-[0_4px_14px_0_rgb(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 active:scale-95 flex items-center justify-center space-x-2"
+            >
+              <span>Proceed to Invoice & Payment</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Acceptance Progress Overlay Modal */}
+        {isAccepting && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2rem] max-w-sm w-full p-8 space-y-6 shadow-2xl border border-white/20">
+              <div className="flex items-center space-x-3 pb-4 border-b border-border/50">
+                <Loader2 className="w-6 h-6 text-neutral-900 animate-spin" />
+                <h3 className="font-black text-lg text-foreground tracking-tight">Accepting Quotation...</h3>
+              </div>
+              
+              <div className="space-y-4 pt-2">
+                {steps.map((step, idx) => {
+                  const isDone = idx < currentStep;
+                  const isActive = idx === currentStep;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`flex items-center space-x-4 transition-all duration-300 ${
+                        isDone || isActive ? 'opacity-100 translate-x-0' : 'opacity-20 translate-x-4'
+                      }`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      ) : isActive ? (
+                        <Loader2 className="w-5 h-5 text-neutral-900 animate-spin shrink-0" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-border shrink-0" />
+                      )}
+                      
+                      <span className={`text-sm ${
+                        isDone ? 'text-emerald-700 font-medium line-through decoration-emerald-200' :
+                        isActive ? 'text-foreground font-black tracking-tight' : 'text-muted-foreground font-medium'
+                      }`}>
+                        {idx === 0 && isDone ? 'Quotation accepted' : step}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── PROPOSAL VIEW (PRE-ACCEPTANCE) ──
   return (
     <div className="min-h-screen bg-neutral-50/50 py-10 px-4 flex flex-col justify-center items-center">
       {/* Mobile viewport simulator container */}
@@ -223,7 +394,7 @@ export default function ClientAcceptPage() {
             {currentStep === steps.length - 1 && (
               <div className="pt-4 animate-in slide-in-from-bottom-2 fade-in">
                 <p className="text-xs text-emerald-800 font-bold text-center bg-emerald-50 border border-emerald-200 py-3 px-4 rounded-xl animate-pulse shadow-inner">
-                  Invoice generated! Launching payment gateway...
+                  Setting everything up for you...
                 </p>
               </div>
             )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { KagazState, Deal, Quote, Invoice, Enquiry, Payment, Reminder, DEFAULT_STATE, paiseToRupee, formatINR } from './schema';
+import { KagazState, Deal, Quote, Invoice, Enquiry, Payment, Reminder, TailoredDocument, DEFAULT_STATE, paiseToRupee, formatINR } from './schema';
 
 export * from './schema';
 
@@ -190,6 +190,106 @@ export async function extractDealWithAI(dealId: string): Promise<Deal | null> {
   });
 
   return updatedDeal;
+}
+
+/**
+ * Tailors all seeded document templates for a specific deal using the LLM.
+ * Called AFTER acceptQuote — never blocks the accept cascade.
+ * Failures are caught and logged; documents get status 'failed' instead of crashing.
+ */
+export async function tailorDocumentsForDeal(dealId: string): Promise<TailoredDocument[]> {
+  const state = getKagazState();
+  const deal = state.deals.find((d) => d.id === dealId);
+  if (!deal) return [];
+
+  const templates = state.templates;
+  if (!templates || templates.length === 0) return [];
+
+  // Find the quote for this deal to include quote data in the context
+  const quote = state.quotes.find((q) => q.deal_id === dealId);
+
+  // Build an enriched deal object with formatted amounts for the LLM
+  const dealContext = {
+    ...deal,
+    formatted_subtotal: quote ? `₹${(quote.subtotal_paise / 100).toLocaleString('en-IN')}` : 'N/A',
+    formatted_tax: quote ? `₹${(quote.tax_paise / 100).toLocaleString('en-IN')}` : 'N/A',
+    formatted_total: quote ? `₹${(quote.total_paise / 100).toLocaleString('en-IN')}` : 'N/A',
+    quote_number: quote?.number || 'N/A',
+    quote_date: quote?.created_at ? new Date(quote.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+    payment_terms: quote?.notes_to_client || 'As per agreement',
+  };
+
+  // Set initial 'generating' status for all templates
+  const initialDocs: TailoredDocument[] = templates.map((t) => ({
+    template_id: t.id,
+    name: t.name,
+    markdown: '',
+    status: 'generating' as const,
+  }));
+
+  // Save generating state so UI can show spinners
+  const dealIndex = state.deals.findIndex((d) => d.id === dealId);
+  if (dealIndex !== -1) {
+    const newDeals = [...state.deals];
+    newDeals[dealIndex] = { ...newDeals[dealIndex], tailored_documents: initialDocs };
+    saveKagazState({ ...getKagazState(), deals: newDeals });
+  }
+
+  // Tailor each template concurrently
+  const results = await Promise.allSettled(
+    templates.map(async (template) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      try {
+        const res = await fetch('/api/tailor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ template_body: template.body_markdown, deal: dealContext }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.ok && json.tailored_markdown) {
+            return {
+              template_id: template.id,
+              name: template.name,
+              markdown: json.tailored_markdown,
+              status: 'ready' as const,
+            };
+          }
+        }
+        throw new Error(`Tailor API returned error for template ${template.id}`);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        console.error(`Failed to tailor template ${template.id}:`, err);
+        return {
+          template_id: template.id,
+          name: template.name,
+          markdown: '',
+          status: 'failed' as const,
+        };
+      }
+    })
+  );
+
+  const finalDocs: TailoredDocument[] = results.map((r) =>
+    r.status === 'fulfilled' ? r.value : { template_id: '', name: '', markdown: '', status: 'failed' as const }
+  );
+
+  // Persist the final results
+  const latestState = getKagazState();
+  const latestDealIndex = latestState.deals.findIndex((d) => d.id === dealId);
+  if (latestDealIndex !== -1) {
+    const newDeals = [...latestState.deals];
+    newDeals[latestDealIndex] = { ...newDeals[latestDealIndex], tailored_documents: finalDocs };
+    saveKagazState({ ...latestState, deals: newDeals });
+  }
+
+  return finalDocs;
 }
 
 /**
