@@ -112,6 +112,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: 'get_quotes',
         description: 'Get all quotes',
         inputSchema: { type: 'object', properties: {} },
+      },
+      {
+        name: 'send_quote_email',
+        description: 'Send a quote to the client via email',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            quote_id: { type: 'string' },
+            to_email: { type: 'string', description: 'The email address of the client' },
+          },
+          required: ['quote_id', 'to_email'],
+        },
       }
     ],
   };
@@ -202,7 +214,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         deal.status = 'Quoted';
         state.quotes.push(newQuote);
         setServerState(state);
-        return { content: [{ type: 'text', text: `Quote ${newQuote.id} created for Deal ${deal.id}` }] };
+        return { content: [{ type: 'text', text: `Quote ${newQuote.id} created for Deal ${deal.id}. Public link: http://localhost:3000/q/${newQuote.public_token}` }] };
       }
 
       case 'accept_quote': {
@@ -269,6 +281,34 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         setServerState(state);
         return { content: [{ type: 'text', text: `Invoice ${invoice.id} marked as paid` }] };
+      }
+
+      case 'send_quote_email': {
+        const { quote_id, to_email } = request.params.arguments as any;
+        const quote = state.quotes.find(q => q.id === quote_id);
+        if (!quote) throw new Error(`Quote ${quote_id} not found`);
+        const deal = state.deals.find(d => d.id === quote.deal_id);
+        
+        try {
+          const response = await fetch('http://localhost:3000/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: to_email,
+              subject: `Your Quotation for ${deal?.project_title || 'Project'}`,
+              quoteNumber: quote.number,
+              quoteUrl: `http://localhost:3000/q/${quote.public_token}`,
+              clientName: deal?.client_name,
+              brandName: state.business.brand_name
+            })
+          });
+          if (!response.ok) {
+            throw new Error(`Email API failed: ${response.statusText}`);
+          }
+          return { content: [{ type: 'text', text: `Email successfully sent to ${to_email} for Quote ${quote_id}` }] };
+        } catch (e: any) {
+          throw new Error(`Failed to send email: ${e.message}`);
+        }
       }
 
       default:
