@@ -48,23 +48,60 @@ export async function POST(request: Request) {
     }
 
     const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: 'meta/llama-3.3-70b-instruct',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: rawText }
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' }
-    });
-
-    const content = response.choices[0]?.message?.content;
     
-    if (!content) {
-      throw new Error('No content in response from model');
-    }
+    const messages: any[] = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: rawText }
+    ];
 
-    const parsedData = JSON.parse(content);
+    let content = '';
+    let parsedData = null;
+
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'meta/llama-3.3-70b-instruct',
+        messages,
+        temperature: 0.1,
+        response_format: { type: 'json_object' }
+      });
+
+      content = response.choices[0]?.message?.content || '';
+      if (!content) throw new Error('No content in response from model');
+
+      let cleanStr = content.trim();
+      if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+      else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+      if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+      cleanStr = cleanStr.trim();
+
+      parsedData = JSON.parse(cleanStr);
+    } catch (initialError: any) {
+      console.warn('Initial extraction or parse failed, retrying once...', initialError.message);
+      
+      messages.push({ role: 'assistant', content });
+      messages.push({ 
+        role: 'user', 
+        content: `Your previous response failed to parse as valid JSON. Error: ${initialError.message}. Please fix the format and return ONLY a valid JSON object without markdown fences.` 
+      });
+
+      const retryResponse = await openai.chat.completions.create({
+        model: 'meta/llama-3.3-70b-instruct',
+        messages,
+        temperature: 0.1,
+        response_format: { type: 'json_object' }
+      });
+
+      const retryContent = retryResponse.choices[0]?.message?.content || '';
+      if (!retryContent) throw new Error('No content in retry response from model');
+
+      let cleanStr = retryContent.trim();
+      if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+      else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+      if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+      cleanStr = cleanStr.trim();
+
+      parsedData = JSON.parse(cleanStr);
+    }
 
     return NextResponse.json({ ok: true, data: parsedData });
   } catch (error: any) {
