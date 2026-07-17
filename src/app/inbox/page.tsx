@@ -25,11 +25,11 @@ export default function InboxPage() {
   // Simulated AI logs during extraction
   const extractionLogs = [
     'Detecting enquiry language (Hinglish)...',
-    'Analyzing requirements: [Website, Online Ordering Setup]...',
+    'Analyzing requirements and scope...',
     'Matching to KĀRYO Rate Card...',
-    'Estimating budget bounds: ₹30,000 - ₹40,000...',
-    'Resolving recommended price: ₹35,000 (Confidence: 94%)...',
-    'Saving Draft Deal dl_demo...',
+    'Estimating budget bounds...',
+    'Structuring deal schema...',
+    'Calculating confidence score...',
   ];
 
   // Handle Play/Pause of voice note
@@ -63,15 +63,15 @@ export default function InboxPage() {
     setIsExtracting(true);
     setExtractionStep(0);
 
-    // Play the log stepper purely for feel; the real work is the fetch below.
+    // Cycle through logs as a "thinking" indicator
     const stepInterval = setInterval(() => {
-      setExtractionStep((prev) => Math.min(prev + 1, extractionLogs.length - 1));
-    }, 400);
+      setExtractionStep((prev) => (prev + 1) % extractionLogs.length);
+    }, 1500);
 
+    // Wait for the real API call
     await extractDealWithAI('dl_demo');
 
     clearInterval(stepInterval);
-    setExtractionStep(extractionLogs.length - 1);
     router.push('/deals/dl_demo');
   };
 
@@ -318,13 +318,20 @@ export default function InboxPage() {
                 <h3 className="font-black text-lg tracking-tight text-white">Kagaz AI Engine</h3>
               </div>
               
-              <div className="bg-black/50 border border-neutral-800/80 rounded-2xl p-4 h-48 overflow-y-auto font-mono text-[11px] text-blue-400 space-y-2.5 relative z-10 shadow-inner scroll-smooth no-scrollbar">
-                {extractionLogs.slice(0, extractionStep + 1).map((log, index) => (
-                  <div key={index} className="flex items-start space-x-2 animate-in slide-in-from-bottom-2 fade-in duration-300">
-                    <span className="text-purple-500 font-bold">&gt;</span>
-                    <span className="font-medium tracking-tight leading-relaxed">{log}</span>
-                  </div>
-                ))}
+              {/* Clean spinner with rotating status line */}
+              <div className="flex flex-col items-center justify-center h-48 space-y-6 relative z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+                  <div className="w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+                <div className="h-6 flex items-center justify-center overflow-hidden">
+                  <p 
+                    key={extractionStep} 
+                    className="font-mono text-xs text-blue-400 animate-in slide-in-from-bottom-4 fade-in duration-300"
+                  >
+                    &gt; {extractionLogs[extractionStep]}
+                  </p>
+                </div>
               </div>
 
               <p className="text-[10px] font-bold text-neutral-500 text-center uppercase tracking-wider relative z-10">
