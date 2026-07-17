@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Save, HelpCircle, FileText, Plus, X } from 'lucide-react';
+import { Save, HelpCircle, FileText, Plus, X, Upload } from 'lucide-react';
 import { useKagazStore, saveKagazState } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
@@ -12,6 +12,27 @@ export default function DocumentTemplatesSettings() {
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newBody, setNewBody] = useState('');
+  
+  // Handle file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Use FileReader to read text content
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setNewBody(event.target.result as string);
+        if (!newName) {
+          // Default to the file name without extension
+          setNewName(file.name.replace(/\.[^/.]+$/, ""));
+        }
+      }
+    };
+    reader.readAsText(file);
+    // Reset file input so same file can be uploaded again if needed
+    e.target.value = '';
+  };
 
   // Save new template to state
   const handleSaveNew = () => {
@@ -119,9 +140,21 @@ export default function DocumentTemplatesSettings() {
                 </div>
                 
                 <div className="space-y-2 flex-1 flex flex-col min-h-[300px]">
-                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex justify-between">
-                    <span>Template Body (Markdown)</span>
-                  </label>
+                  <div className="flex justify-between items-end">
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      Template Body (Markdown)
+                    </label>
+                    <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-bold rounded-lg transition-colors border border-border">
+                      <Upload className="w-3 h-3" />
+                      <span>Upload .md / .txt file</span>
+                      <input 
+                        type="file" 
+                        accept=".md,.txt,text/plain,text/markdown" 
+                        className="hidden" 
+                        onChange={handleFileUpload} 
+                      />
+                    </label>
+                  </div>
                   <textarea
                     value={newBody}
                     onChange={(e) => setNewBody(e.target.value)}
