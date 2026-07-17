@@ -67,75 +67,76 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
     <div className="flex-1 flex flex-col min-h-screen bg-background">
       {/* Floating Glass Header */}
       <div className="relative pt-4 z-40 px-4 mb-6 flex justify-center no-print w-full pointer-events-none">
-        <header className="w-full max-w-5xl glass rounded-full px-6 py-3 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.06)] pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+        <header className="w-full max-w-6xl glass rounded-full px-4 sm:px-6 py-3 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.06)] pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center space-x-6">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity shrink-0">
               <span className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-500">Kagaz</span>
-              <span className="bg-neutral-100 text-neutral-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-neutral-200 shadow-sm">
+              <span className="hidden sm:inline bg-neutral-100 text-neutral-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-neutral-200 shadow-sm">
                 {state.business.brand_name}
               </span>
             </Link>
+
+            {/* Main Navigation (Top) */}
+            <nav className="flex items-center space-x-1 sm:space-x-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    title={item.name}
+                    className={`flex items-center justify-center px-3 py-2 rounded-xl transition-all ${
+                      isActive
+                        ? 'bg-neutral-900 text-white shadow-sm'
+                        : 'text-muted-foreground hover:bg-neutral-100 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 sm:mr-1.5" />
+                    <span className="hidden md:inline text-xs font-semibold">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Quick Stats Summary */}
-          <div className="hidden md:flex items-center space-x-8 text-sm">
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Won (Pre-GST)</p>
-              <p className="font-bold text-foreground">{formatINRPaise(summary.amounts_paise.won)}</p>
+          <div className="flex items-center space-x-4">
+            {/* Quick Stats Summary */}
+            <div className="hidden lg:flex items-center space-x-6 text-sm mr-4 border-r border-border/60 pr-6">
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Won</p>
+                <p className="font-bold text-foreground">{formatINRPaise(summary.amounts_paise.won)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Collected</p>
+                <p className="font-bold text-emerald-600">{formatINRPaise(summary.amounts_paise.collected)}</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Collected</p>
-              <p className="font-bold text-emerald-600">{formatINRPaise(summary.amounts_paise.collected)}</p>
-            </div>
-          </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <button
-              onClick={handleReset}
-              title="Reset Demo Data"
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-full transition-all hover:rotate-180 flex items-center justify-center"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSignOut}
-              title="Sign Out"
-              className="p-2 text-rose-500 hover:text-white hover:bg-rose-500 rounded-full transition-all flex items-center justify-center shadow-sm border border-transparent hover:border-rose-600"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <button
+                onClick={handleReset}
+                title="Reset Demo Data"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-full transition-all hover:rotate-180 flex items-center justify-center"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleSignOut}
+                title="Sign Out"
+                className="p-2 text-rose-500 hover:text-white hover:bg-rose-50 hover:border-rose-200 rounded-full transition-all flex items-center justify-center shadow-sm border border-transparent"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </header>
       </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-24 md:pb-6 flex flex-col">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-12 flex flex-col">
         {children}
       </main>
-
-      {/* Bottom Nav Bar (Sticky footer on small screens, tab bar on large) */}
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass rounded-full px-2 py-2 no-print shadow-xl">
-        <div className="flex items-center space-x-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex flex-col items-center justify-center w-16 h-12 rounded-2xl transition-all ${
-                  isActive
-                    ? 'bg-neutral-900 text-white shadow-md'
-                    : 'text-muted-foreground hover:bg-neutral-100 hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-5 h-5 mb-0.5" />
-                <span className="text-[9px] font-semibold">{item.name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }
