@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { KagazState, DEFAULT_STATE } from './store';
+import { KagazState, DEFAULT_STATE } from './schema';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
