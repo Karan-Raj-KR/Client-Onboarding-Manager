@@ -447,7 +447,7 @@ export default function EditDealCard() {
           <div className="space-y-6 lg:space-y-8">
             
             {/* Live math card */}
-            <div className="bg-background border border-border/50 rounded-3xl p-6 sm:p-8 space-y-5 shadow-lg lg:sticky lg:top-28 z-10">
+            <div className="bg-background border border-border/50 rounded-3xl p-6 sm:p-8 space-y-5 shadow-lg">
               <h3 className="font-bold text-base text-foreground border-b border-border/50 pb-3">Live Calculation</h3>
               
               <div className="space-y-3.5 text-sm font-medium">
