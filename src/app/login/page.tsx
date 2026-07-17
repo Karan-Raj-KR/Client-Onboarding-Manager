@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const supabase = createClient();
+  console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
