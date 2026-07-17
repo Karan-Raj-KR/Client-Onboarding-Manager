@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+
+# next.js build output
+.next/
+out/
+build/
+
+# environment variables (secrets)
+# .env*
+# .env.local
+
+# API keys and certs
+*.pem
