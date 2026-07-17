@@ -505,10 +505,30 @@ export function useKagazStore() {
 
 // === BUSINESS TRANSACTION LOGIC ===
 
+const FALLBACK_DEMO_EXTRACTION = {
+  project_title: 'Restaurant Website with Online Ordering',
+  client_name: 'Aditi Sharma (Aditi\'s Kitchen)',
+  scope_summary: 'A responsive website for a local restaurant, complete with online menu listing, digital shopping cart checkout, and WhatsApp order submission routing.',
+  budget_min_paise: 3000000,
+  budget_max_paise: 4000000,
+  timeline_days: 14,
+  confidence_bps: 9400,
+  line_items: [
+    {
+      id: 'li_demo_1',
+      rate_card_item_id: 'rc_web',
+      description: 'Restaurant Website + Online Ordering Setup',
+      quantity: 1,
+      unit_price_paise: 3500000, // Pre-fill recommended ₹35,000
+      tax_rate_bps: 1800,
+    },
+  ],
+};
+
 /**
  * Simulates AI extraction on a deal
  */
-export function extractDealWithAI(dealId: string): Deal | null {
+export async function extractDealWithAI(dealId: string): Promise<Deal | null> {
   const state = getKagazState();
   const dealIndex = state.deals.findIndex((d) => d.id === dealId);
   if (dealIndex === -1) return null;
@@ -516,28 +536,75 @@ export function extractDealWithAI(dealId: string): Deal | null {
   const deal = state.deals[dealIndex];
   if (deal.status !== 'New') return deal;
 
+  const rawText = deal.notes || deal.scope_summary || '';
+  let extractionData = FALLBACK_DEMO_EXTRACTION;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rawText }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok && json.data) {
+        let parsedData = json.data;
+        if (typeof parsedData === 'string') {
+          let cleanStr = parsedData.trim();
+          if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+          else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+          if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+          cleanStr = cleanStr.trim();
+          parsedData = JSON.parse(cleanStr);
+        }
+        
+        extractionData = {
+          ...FALLBACK_DEMO_EXTRACTION,
+          project_title: parsedData.project_title ?? '',
+          client_name: parsedData.client_name ?? '',
+          scope_summary: parsedData.scope_summary ?? '',
+          budget_min_paise: typeof parsedData.budget_min_paise === 'number' ? parsedData.budget_min_paise : 0,
+          budget_max_paise: typeof parsedData.budget_max_paise === 'number' ? parsedData.budget_max_paise : 0,
+          timeline_days: typeof parsedData.timeline_days === 'number' ? parsedData.timeline_days : 0,
+          confidence_bps: typeof parsedData.confidence_bps === 'number' ? parsedData.confidence_bps : 0,
+        };
+        
+        // Also map phone if they returned it (though it wasn't in demo fallback, it's in Deal)
+        if (typeof parsedData.client_phone === 'string') {
+          (extractionData as any).client_phone = parsedData.client_phone;
+        } else {
+          (extractionData as any).client_phone = '';
+        }
+
+        if (Array.isArray(parsedData.missing_information)) {
+          (extractionData as any).missing_information = parsedData.missing_information;
+        }
+      } else {
+        console.error('API /extract returned ok: false', json);
+      }
+    } else {
+      console.error('Fetch to /api/extract failed with status:', res.status);
+    }
+  } catch (error) {
+    console.error('Fetch to /api/extract failed or timed out:', error);
+  }
+
   const updatedDeal: Deal = {
     ...deal,
     status: 'Draft',
-    // Pre-populate extraction content
-    project_title: 'Restaurant Website with Online Ordering',
-    client_name: 'Aditi Sharma (Aditi\'s Kitchen)',
-    scope_summary: 'A responsive website for a local restaurant, complete with online menu listing, digital shopping cart checkout, and WhatsApp order submission routing.',
-    budget_min_paise: 3000000,
-    budget_max_paise: 4000000,
-    timeline_days: 14,
-    confidence_bps: 9400,
-    line_items: [
-      {
-        id: 'li_demo_1',
-        rate_card_item_id: 'rc_web',
-        description: 'Restaurant Website + Online Ordering Setup',
-        quantity: 1,
-        unit_price_paise: 3500000, // Pre-fill recommended ₹35,000
-        tax_rate_bps: 1800,
-      },
-    ],
+    ...extractionData,
   };
+  
+  if ((extractionData as any).missing_information) {
+    updatedDeal.missing_information = (extractionData as any).missing_information;
+  }
 
   const newDeals = [...state.deals];
   newDeals[dealIndex] = updatedDeal;

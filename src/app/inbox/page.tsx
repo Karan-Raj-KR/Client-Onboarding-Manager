@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Play, Pause, ChevronLeft, Send, CheckCheck, Loader2 } from 'lucide-react';
-import { useKagazStore, extractDealWithAI } from '@/lib/store';
+import { useKagazStore, extractDealWithAI, updateDeal } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
 export default function InboxPage() {
@@ -59,26 +59,20 @@ export default function InboxPage() {
   }, []);
 
   // Handle AI Extraction cascade
-  const handleAIProcess = () => {
+  const handleAIProcess = async () => {
     setIsExtracting(true);
     setExtractionStep(0);
 
-    // Increment extraction log steps
+    // Play the log stepper purely for feel; the real work is the fetch below.
     const stepInterval = setInterval(() => {
-      setExtractionStep((prev) => {
-        if (prev >= extractionLogs.length - 1) {
-          clearInterval(stepInterval);
-          // Apply state change in database
-          extractDealWithAI('dl_demo');
-          // Redirect to deal page
-          setTimeout(() => {
-            router.push('/deals/dl_demo');
-          }, 600);
-          return prev;
-        }
-        return prev + 1;
-      });
+      setExtractionStep((prev) => Math.min(prev + 1, extractionLogs.length - 1));
     }, 400);
+
+    await extractDealWithAI('dl_demo');
+
+    clearInterval(stepInterval);
+    setExtractionStep(extractionLogs.length - 1);
+    router.push('/deals/dl_demo');
   };
 
   // Chats list data
