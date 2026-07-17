@@ -1,0 +1,278 @@
+{
+  "business": {
+    "id": "biz_karyo",
+    "legal_name": "KĀRYO TECHNOLOGIES PVT LTD",
+    "brand_name": "KĀRYO",
+    "gstin": "29ABCDE1234F1Z5",
+    "address": "12, 3rd Cross Road, Koramangala 4th Block, Bengaluru, Karnataka 560034",
+    "bank_or_upi_handle": "karyo@upi",
+    "logo_url": "/logo.png"
+  },
+  "rateCard": [
+    {
+      "id": "rc_web",
+      "name": "Restaurant Website + Online Ordering Setup",
+      "description": "Custom React-based website, digital menu, shopping cart, WhatsApp ordering integration, and Google Business setup.",
+      "sac_code": "998313",
+      "unit_price_paise": 3500000,
+      "tax_rate_bps": 1800,
+      "active": true
+    },
+    {
+      "id": "rc_brand",
+      "name": "Brand Identity Starter",
+      "description": "Logo suite, primary color palette, typography guidelines, visiting card design, and social media templates.",
+      "sac_code": "998311",
+      "unit_price_paise": 1800000,
+      "tax_rate_bps": 1800,
+      "active": true
+    },
+    {
+      "id": "rc_social",
+      "name": "Social Media Monthly Retainer",
+      "description": "12 customized graphics, caption copywriting in local language/tone, hashtag strategy, and monthly performance report.",
+      "sac_code": "998315",
+      "unit_price_paise": 2500000,
+      "tax_rate_bps": 1800,
+      "active": true
+    },
+    {
+      "id": "rc_consult",
+      "name": "Strategy Consultation",
+      "description": "2-hour deep-dive growth strategy session, competitor analysis snapshot, and local promotion action checklist.",
+      "sac_code": "998319",
+      "unit_price_paise": 500000,
+      "tax_rate_bps": 1800,
+      "active": true
+    }
+  ],
+  "deals": [
+    {
+      "id": "dl_paid",
+      "enquiry_id": null,
+      "client_name": "Aaranya Sharma (Aaranya Boutique)",
+      "client_phone": "+91 98860 12345",
+      "project_title": "Aaranya Boutique Branding",
+      "scope_summary": "Complete brand guidelines, primary logo, and social media launch package.",
+      "budget_min_paise": 4000000,
+      "budget_max_paise": 6000000,
+      "timeline_days": 30,
+      "status": "Paid",
+      "confidence_bps": 9500,
+      "missing_information": [],
+      "notes": "Historical deal. Paid on time.",
+      "line_items": [
+        {
+          "id": "li_p1",
+          "rate_card_item_id": "rc_brand",
+          "description": "Brand Identity Starter Package",
+          "quantity": 1,
+          "unit_price_paise": 1800000,
+          "tax_rate_bps": 1800
+        },
+        {
+          "id": "li_p2",
+          "rate_card_item_id": "rc_social",
+          "description": "Social Media Launch Retainer (Customized)",
+          "quantity": 1,
+          "unit_price_paise": 3200000,
+          "tax_rate_bps": 1800
+        }
+      ],
+      "created_at": "2026-06-15T10:00:00Z"
+    },
+    {
+      "id": "dl_pending",
+      "enquiry_id": null,
+      "client_name": "Rajesh Kumar (Gourmet Chai)",
+      "client_phone": "+91 99000 54321",
+      "project_title": "Gourmet Chai Socials",
+      "scope_summary": "Retainer for social media copywriting and strategy consultation.",
+      "budget_min_paise": 2000000,
+      "budget_max_paise": 3000000,
+      "timeline_days": 30,
+      "status": "Payment Pending",
+      "confidence_bps": 9000,
+      "missing_information": [],
+      "notes": "Historical deal. Awaiting invoice clearance.",
+      "line_items": [
+        {
+          "id": "li_pn1",
+          "rate_card_item_id": "rc_social",
+          "description": "Social Media Monthly Retainer",
+          "quantity": 1,
+          "unit_price_paise": 2500000,
+          "tax_rate_bps": 1800
+        },
+        {
+          "id": "li_pn2",
+          "rate_card_item_id": "rc_consult",
+          "description": "Strategy Consultation",
+          "quantity": 1,
+          "unit_price_paise": 300000,
+          "tax_rate_bps": 1800
+        }
+      ],
+      "created_at": "2026-07-01T12:00:00Z"
+    },
+    {
+      "id": "dl_quoted",
+      "enquiry_id": null,
+      "client_name": "Dr. Ananya Rao (Veda Yoga)",
+      "client_phone": "+91 97410 98765",
+      "project_title": "Veda Yoga Strategy",
+      "scope_summary": "Strategy consultation and initial brand guidelines.",
+      "budget_min_paise": 3500000,
+      "budget_max_paise": 4500000,
+      "timeline_days": 20,
+      "status": "Quoted",
+      "confidence_bps": 8500,
+      "missing_information": [
+        "Exact studio locations"
+      ],
+      "notes": "Historical deal. Quote currently valid.",
+      "line_items": [
+        {
+          "id": "li_q1",
+          "rate_card_item_id": "rc_brand",
+          "description": "Brand Identity Starter Package (Custom)",
+          "quantity": 1,
+          "unit_price_paise": 1850000,
+          "tax_rate_bps": 1800
+        },
+        {
+          "id": "li_q2",
+          "rate_card_item_id": "rc_social",
+          "description": "Social Media Marketing Launch",
+          "quantity": 1,
+          "unit_price_paise": 2350000,
+          "tax_rate_bps": 1800
+        }
+      ],
+      "created_at": "2026-07-10T15:30:00Z"
+    },
+    {
+      "id": "dl_demo",
+      "enquiry_id": "enq_demo",
+      "client_name": "Aditi Sharma",
+      "client_phone": "+91 98450 67890",
+      "project_title": "Restaurant Website with Online Ordering",
+      "scope_summary": "Five-page website with menu card, cart, online order collection via WhatsApp, and basic SEO.",
+      "budget_min_paise": 3000000,
+      "budget_max_paise": 4000000,
+      "timeline_days": 14,
+      "status": "New",
+      "confidence_bps": 9400,
+      "missing_information": [
+        "GSTIN",
+        "menu item pricing",
+        "delivery partner integrations"
+      ],
+      "notes": "bhai restaurant ke liye website chahiye, online ordering bhi, budget 30-40k, kitne din?",
+      "line_items": [],
+      "created_at": "2026-07-17T15:00:00Z"
+    }
+  ],
+  "quotes": [
+    {
+      "id": "qt_paid",
+      "deal_id": "dl_paid",
+      "number": "Q-2026-0098",
+      "public_token": "token_paid",
+      "status": "Accepted",
+      "valid_until": "2026-06-22",
+      "subtotal_paise": 5000000,
+      "tax_paise": 900000,
+      "total_paise": 5900000,
+      "notes_to_client": "Please make 100% payment on receipt.",
+      "accepted_at": "2026-06-16T11:00:00Z",
+      "created_at": "2026-06-15T11:00:00Z"
+    },
+    {
+      "id": "qt_pending",
+      "deal_id": "dl_pending",
+      "number": "Q-2026-0099",
+      "public_token": "token_pending",
+      "status": "Accepted",
+      "valid_until": "2026-07-08",
+      "subtotal_paise": 2800000,
+      "tax_paise": 504000,
+      "total_paise": 3304000,
+      "notes_to_client": "50% advance, 50% on milestone complete.",
+      "accepted_at": "2026-07-02T10:00:00Z",
+      "created_at": "2026-07-01T13:00:00Z"
+    },
+    {
+      "id": "qt_quoted",
+      "deal_id": "dl_quoted",
+      "number": "Q-2026-0100",
+      "public_token": "token_yoga",
+      "status": "Quoted",
+      "valid_until": "2026-07-24",
+      "subtotal_paise": 4200000,
+      "tax_paise": 756000,
+      "total_paise": 4956000,
+      "notes_to_client": "Validity 14 days. Prices exclude extra domain hosting charges.",
+      "accepted_at": null,
+      "created_at": "2026-07-10T16:00:00Z"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv_paid",
+      "quote_id": "qt_paid",
+      "number": "INV-2026-0098",
+      "status": "Paid",
+      "issued_at": "2026-06-16T11:05:00Z",
+      "due_at": "2026-06-23T11:05:00Z",
+      "subtotal_paise": 5000000,
+      "tax_paise": 900000,
+      "total_paise": 5900000,
+      "pdf_path": "/invoices/inv_paid.pdf",
+      "created_at": "2026-06-16T11:05:00Z"
+    },
+    {
+      "id": "inv_pending",
+      "quote_id": "qt_pending",
+      "number": "INV-2026-0099",
+      "status": "Issued",
+      "issued_at": "2026-07-02T10:05:00Z",
+      "due_at": "2026-07-09T10:05:00Z",
+      "subtotal_paise": 2800000,
+      "tax_paise": 504000,
+      "total_paise": 3304000,
+      "pdf_path": "/invoices/inv_pending.pdf",
+      "created_at": "2026-07-02T10:05:00Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay_paid",
+      "invoice_id": "inv_paid",
+      "provider": "mock",
+      "payment_url": "https://upi.example/mock-pay/inv_paid",
+      "amount_paise": 5900000,
+      "status": "paid",
+      "paid_at": "2026-06-16T15:00:00Z"
+    },
+    {
+      "id": "pay_pending",
+      "invoice_id": "inv_pending",
+      "provider": "mock",
+      "payment_url": "https://upi.example/mock-pay/inv_pending",
+      "amount_paise": 3304000,
+      "status": "pending",
+      "paid_at": null
+    }
+  ],
+  "reminders": [
+    {
+      "id": "rem_pending",
+      "invoice_id": "inv_pending",
+      "scheduled_for": "2026-07-18T10:00:00Z",
+      "channel": "whatsapp",
+      "status": "armed",
+      "body": "Hi Rajesh, a quick reminder that invoice INV-2026-0099 for ₹33,040 is pending. You can pay here: https://kagaz.in/pay/token_pending"
+    }
+  ]
+}
