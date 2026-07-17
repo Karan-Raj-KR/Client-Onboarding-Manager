@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerState, setServerState } from '@/lib/server-db';
-import { KagazState } from '@/lib/store';
+import { KagazState } from '@/lib/schema';
 
 export async function GET() {
   const state = getServerState();
