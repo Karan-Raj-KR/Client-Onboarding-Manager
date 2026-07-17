@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Inbox, CreditCard, Settings, RefreshCw, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Inbox, CreditCard, Settings, RefreshCw, LogOut, Loader2, FileText } from 'lucide-react';
 import { useKagazStore, resetKagazStore, formatINRPaise, api } from '@/lib/store';
 import { createClient } from '@/lib/supabase';
 
@@ -41,6 +41,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
   const navItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Inbox', href: '/inbox', icon: Inbox },
+    { name: 'Templates', href: '/settings/templates', icon: FileText },
     { name: 'Rate Card', href: '/settings/rate-card', icon: Settings },
   ];
 
