@@ -113,8 +113,8 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
         {children}
       </main>
 
-      {/* Bottom Nav Bar (Mobile-friendly sticky footer on small screens, tab bar on large) */}
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass rounded-full px-2 py-2 md:hidden no-print shadow-xl">
+      {/* Bottom Nav Bar (Sticky footer on small screens, tab bar on large) */}
+      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 glass rounded-full px-2 py-2 no-print shadow-xl">
         <div className="flex items-center space-x-2">
           {navItems.map((item) => {
             const Icon = item.icon;
