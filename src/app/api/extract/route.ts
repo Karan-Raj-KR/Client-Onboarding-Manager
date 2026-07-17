@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  baseURL: 'https://integrate.api.nvidia.com/v1',
-  apiKey: process.env.NVIDIA_API_KEY,
-});
+// We instantiate lazily to prevent Vercel build errors if the API key isn't set during build
+function getOpenAIClient() {
+  return new OpenAI({
+    baseURL: 'https://integrate.api.nvidia.com/v1',
+    apiKey: process.env.NVIDIA_API_KEY || 'dummy-key-to-bypass-build-check',
+  });
+}
 
 const SYSTEM_PROMPT = `You are "Kagaz AI", an extraction engine for an Indian freelancer's client-onboarding tool.
 
@@ -44,6 +47,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: 'Missing rawText in request body' }, { status: 400 });
     }
 
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: 'meta/llama-3.3-70b-instruct',
       messages: [
