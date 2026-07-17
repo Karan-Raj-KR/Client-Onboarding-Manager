@@ -291,7 +291,7 @@ export default function QuotePreview() {
 
           {/* Footer Signature placeholder */}
           <div className="border-t border-dashed border-border/80 pt-8 mt-12 text-center text-muted-foreground text-[10px] space-y-1.5 font-medium">
-            <p>This is a computer-generated quotation prepared by <strong>KĀRYO</strong> via <strong>Kagaz</strong>.</p>
+            <p>This is a computer-generated quotation prepared via <strong>KĀRYO</strong> Client Onboarding Manager.</p>
             <p>For any queries, please reach out to hello@karyo.in.</p>
           </div>
 

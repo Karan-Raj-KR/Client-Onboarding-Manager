@@ -53,6 +53,7 @@ export interface Deal {
   notes: string | null;
   line_items: DealLineItem[];
   created_at: string;
+  tailored_documents?: any[];
 }
 
 export interface Quote {
@@ -111,6 +112,7 @@ export interface KagazState {
   invoices: Invoice[];
   payments: Payment[];
   reminders: Reminder[];
+  templates?: any[];
 }
 
 // === INR FORMATTING HELPERS ===
@@ -411,7 +413,7 @@ const INITIAL_REMINDERS: Reminder[] = [
     scheduled_for: '2026-07-18T10:00:00Z',
     channel: 'whatsapp',
     status: 'armed',
-    body: 'Hi Rajesh, a quick reminder that invoice INV-2026-0099 for ₹33,040 is pending. You can pay here: https://kagaz.in/pay/token_pending',
+    body: 'Hi Rajesh, a quick reminder that invoice INV-2026-0099 for ₹33,040 is pending. You can pay here: https://karyo.in/pay/token_pending',
   },
 ];
 

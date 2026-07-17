@@ -1,4 +1,4 @@
-# Database Schema — Kagaz MVP
+# Database Schema — KĀRYO MVP
 
 Use SQLite with Prisma or equivalent. IDs are UUID/CUID strings; timestamps are UTC. Amounts ending `_paise` are integers.
 

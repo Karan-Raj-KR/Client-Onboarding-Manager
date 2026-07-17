@@ -1,4 +1,4 @@
-# System Architecture — Kagaz
+# System Architecture — KĀRYO
 
 ```mermaid
 flowchart LR

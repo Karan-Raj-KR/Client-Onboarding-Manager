@@ -267,7 +267,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           id: `pay_${Date.now()}`,
           invoice_id: invoice.id,
           provider: 'mock',
-          payment_url: `https://kagaz.in/pay/${invoice.id}`,
+          payment_url: `https://karyo.in/pay/${invoice.id}`,
           amount_paise: invoice.total_paise,
           status: 'paid',
           paid_at: new Date().toISOString()
@@ -330,7 +330,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Kagaz MCP server running with automated CRUD tools on stdio');
+  console.error('KĀRYO MCP server running with automated CRUD tools on stdio');
 }
 
 main().catch((error) => {

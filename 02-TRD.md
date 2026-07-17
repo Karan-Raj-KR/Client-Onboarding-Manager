@@ -1,4 +1,4 @@
-# Technical Requirements Document — Kagaz
+# Technical Requirements Document — KĀRYO
 
 ## 1. Recommended fast stack
 

@@ -13,7 +13,7 @@ function getOpenAIClient() {
   });
 }
 
-const SYSTEM_PROMPT = `You are "Kagaz AI", an extraction engine for an Indian freelancer's client-onboarding tool.
+const SYSTEM_PROMPT = `You are "KĀRYO AI", an extraction engine for an Indian freelancer's client-onboarding tool.
 
 Your job: read a single, often messy, Hinglish, WhatsApp-style client enquiry and return the structured deal data as ONE JSON object.
 

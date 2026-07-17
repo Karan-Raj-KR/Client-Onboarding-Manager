@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kagaz — AI Back-Office for Indian Freelancers",
+  title: "KĀRYO — Client Onboarding Manager",
   description: "A client messages on WhatsApp. The quote, GST-ready invoice, and UPI payment link happen themselves.",
 };
 

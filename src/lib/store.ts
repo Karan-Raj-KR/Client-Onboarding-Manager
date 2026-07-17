@@ -362,7 +362,7 @@ export function acceptQuote(publicToken: string, acceptedByName: string): {
     scheduled_for: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days later
     channel: 'whatsapp',
     status: 'armed',
-    body: `Hi ${deal?.client_name || 'Client'}, this is a reminder that invoice ${invoiceNumber} for ${formatINR(paiseToRupee(quote.total_paise))} is due in 5 days. You can view it here: https://kagaz.in/q/${publicToken}`,
+    body: `Hi ${deal?.client_name || 'Client'}, this is a reminder that invoice ${invoiceNumber} for ${formatINR(paiseToRupee(quote.total_paise))} is due in 5 days. You can view it here: https://karyo.in/q/${publicToken}`,
   };
 
   saveKagazState({

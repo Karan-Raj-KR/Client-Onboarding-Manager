@@ -32,7 +32,7 @@ import {
 } from './store';
 
 async function runTests() {
-  console.log('🧪 Starting Kagaz Core Logic Tests...\n');
+  console.log('🧪 Starting KĀRYO Core Logic Tests...\n');
 
   // Test 1: Currency Conversion
   console.log('Test 1: Currency Conversion');
@@ -149,7 +149,7 @@ async function runTests() {
   }
   console.log('✅ Simulated payment and pre-GST Collected value aggregation passed.');
 
-  console.log('\n🎉 ALL KAGAZ CORE TESTS PASSED SUCCESSFULLY! 🎉\n');
+  console.log('\n🎉 ALL KĀRYO CORE TESTS PASSED SUCCESSFULLY! 🎉\n');
 }
 
 try {

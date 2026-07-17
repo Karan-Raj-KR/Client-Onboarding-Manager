@@ -78,8 +78,8 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-700">
           <div>
-            <h1 className="text-3xl font-black tracking-tighter text-foreground">Kagaz Back-Office</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-1">AI-powered pipelines for top-tier freelancers.</p>
+            <h1 className="text-3xl font-black tracking-tighter text-foreground">KĀRYO</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-1">Client onboarding manager.</p>
           </div>
           <Link
             href="/inbox"

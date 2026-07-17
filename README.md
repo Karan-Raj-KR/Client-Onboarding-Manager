@@ -1,12 +1,12 @@
-# Kagaz
+# KĀRYO
 
 > A WhatsApp enquiry in. A branded quotation, GST-ready invoice, and UPI payment link out.
 
-Kagaz is an AI back-office prototype for Indian freelancers and agencies. It turns unstructured, often Hinglish, client enquiries into an editable deal and branded quotation. When the client accepts, it creates an invoice, a payment-link record, and a reminder workflow—without rebuilding the deal by hand.
+KĀRYO is an AI back-office prototype for Indian freelancers and agencies. It turns unstructured, often Hinglish, client enquiries into an editable deal and branded quotation. When the client accepts, it creates an invoice, a payment-link record, and a reminder workflow—without rebuilding the deal by hand.
 
-## Why Kagaz?
+## Why KĀRYO?
 
-Indian freelancers commonly sell through WhatsApp, collect through UPI, and need GST-aware documents. Most global quote-to-cash products assume forms or CRMs, USD pricing, Stripe/PayPal, and US tax workflows. Kagaz is built around India’s working rails.
+Indian freelancers commonly sell through WhatsApp, collect through UPI, and need GST-aware documents. Most global quote-to-cash products assume forms or CRMs, USD pricing, Stripe/PayPal, and US tax workflows. KĀRYO is built around India’s working rails.
 
 ## Demo flow
 
@@ -49,7 +49,7 @@ Enquiry → AI extraction → editable deal → rate card → quotation PDF/publ
 
 ## Important prototype boundaries
 
-Kagaz generates a payment link; it does not process a payment in this prototype. Invoice fields are GST-ready but this is not GST e-invoice filing or tax advice. WhatsApp ingestion and live provider integrations are planned post-hackathon.
+KĀRYO generates a payment link; it does not process a payment in this prototype. Invoice fields are GST-ready but this is not GST e-invoice filing or tax advice. WhatsApp ingestion and live provider integrations are planned post-hackathon.
 
 ## Team
 

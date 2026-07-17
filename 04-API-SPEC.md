@@ -1,4 +1,4 @@
-# API Specification — Kagaz MVP
+# API Specification — KĀRYO MVP
 
 All JSON endpoints use `/api/v1`. Owner endpoints are locally trusted for the hackathon; add auth middleware post-event. Errors use `{ "error": { "code": "...", "message": "..." } }`.
 

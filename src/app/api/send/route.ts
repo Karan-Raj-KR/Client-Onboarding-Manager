@@ -21,9 +21,9 @@ export async function POST(request: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const { data, error } = await resend.emails.send({
-      from: `${brandName || 'Kagaz'} <onboarding@resend.dev>`,
+      from: `${brandName || 'KĀRYO'} <onboarding@resend.dev>`,
       to: [to],
-      subject: subject || `Your Quotation from ${brandName || 'Kagaz'}`,
+      subject: subject || `Your Quotation from ${brandName || 'KĀRYO'}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #FAF8F5;">
           <div style="background-color: #FFFFFF; border-radius: 24px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #E5E7EB;">
@@ -49,9 +49,7 @@ export async function POST(request: Request) {
             
             <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 32px 0;" />
             
-            <p style="font-size: 12px; color: #9CA3AF; text-align: center; margin-bottom: 0;">
-              Sent via <strong>Kagaz</strong> on behalf of ${brandName || 'our agency'}.
-            </p>
+            <p style="margin: 0; font-size: 12px; color: #666666;">Sent via <strong>KĀRYO</strong> Client Onboarding Manager on behalf of ${brandName || 'our agency'}.</p>
           </div>
         </div>
       `,

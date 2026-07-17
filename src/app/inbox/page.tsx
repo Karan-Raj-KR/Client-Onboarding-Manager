@@ -272,7 +272,7 @@ export default function InboxPage() {
                     <div className="p-1.5 bg-neutral-900 rounded-lg shadow-sm">
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
-                    <h4 className="font-black text-xs uppercase tracking-wider text-foreground">Kagaz AI</h4>
+                    <h4 className="font-black text-xs uppercase tracking-wider text-foreground">KĀRYO AI</h4>
                   </div>
                   <p className="text-xs font-medium text-muted-foreground leading-relaxed">
                     Unstructured Hinglish enquiry detected. We can map this client to your rate card, create a budget estimate, and draft a deal card in 1 tap.
@@ -290,7 +290,7 @@ export default function InboxPage() {
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Process with Kagaz AI</span>
+                        <span>Process with KĀRYO AI</span>
                       </>
                     )}
                   </button>
@@ -304,7 +304,7 @@ export default function InboxPage() {
             <input
               type="text"
               disabled
-              placeholder="Use 'Process with Kagaz AI' to extract deal..."
+              placeholder="Use 'Process with KĀRYO AI' to extract deal..."
               className="flex-1 bg-white border border-border/80 shadow-inner rounded-full px-5 py-2.5 text-xs text-muted-foreground cursor-not-allowed font-medium"
             />
             <button disabled className="p-2.5 bg-neutral-100 rounded-full text-muted-foreground">
@@ -324,7 +324,7 @@ export default function InboxPage() {
                 <div className="p-2 bg-blue-500/10 rounded-xl">
                   <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
                 </div>
-                <h3 className="font-black text-lg tracking-tight text-white">Kagaz AI Engine</h3>
+                <h3 className="font-black text-lg tracking-tight text-white">KĀRYO AI Engine</h3>
               </div>
               
               {/* Clean spinner with rotating status line */}

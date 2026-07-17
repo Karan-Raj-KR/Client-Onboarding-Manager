@@ -68,8 +68,8 @@ export default function LoginPage() {
       <div className="bg-white rounded-[2rem] shadow-[0_8px_40px_rgb(0,0,0,0.06)] border border-border/40 p-8 w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
         
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black tracking-tighter uppercase text-neutral-900 mb-2">Kagaz</h1>
-          <p className="text-sm font-medium text-muted-foreground">Sign in to your AI Back-Office</p>
+          <h1 className="text-3xl font-black tracking-tighter uppercase text-neutral-900 mb-2">KĀRYO</h1>
+          <p className="text-sm font-medium text-muted-foreground">Sign in to your Client Onboarding Manager</p>
         </div>
 
         {error && (

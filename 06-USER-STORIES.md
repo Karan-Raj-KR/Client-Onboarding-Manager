@@ -1,4 +1,4 @@
-# User Stories — Kagaz
+# User Stories — KĀRYO
 
 ## P0 — must complete
 

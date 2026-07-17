@@ -1,6 +1,6 @@
-# Kagaz — Documentation Pack
+# KĀRYO — Documentation Pack
 
-**Kagaz** is an AI back-office for Indian freelancers: a messy enquiry becomes an editable deal, a branded quotation, and—after acceptance—a GST-ready invoice and UPI/Razorpay payment link.
+**KĀRYO** is an AI back-office for Indian freelancers: a messy enquiry becomes an editable deal, a branded quotation, and—after acceptance—a GST-ready invoice and UPI/Razorpay payment link.
 
 This package assumes a 24-hour hackathon. It makes the text-enquiry flow reliable first; voice transcription, real WhatsApp, real Razorpay, and GST e-invoicing are explicitly non-critical integrations.
 
@@ -18,4 +18,4 @@ This package assumes a 24-hour hackathon. It makes the text-enquiry flow reliabl
 
 ## Product decision
 
-Use **Kagaz** as the working name: it is short, memorable, India-native, and maps naturally to quotations and invoices. Keep the product claim precise: Kagaz creates a **payment-link workflow**, not a live payment transaction or legal GST filing system.
+Use **KĀRYO** as the working name: it is short, memorable, India-native, and maps naturally to quotations and invoices. Keep the product claim precise: KĀRYO creates a **payment-link workflow**, not a live payment transaction or legal GST filing system.

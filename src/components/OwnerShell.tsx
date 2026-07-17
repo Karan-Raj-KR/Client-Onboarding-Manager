@@ -69,9 +69,9 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
         <header className="w-full max-w-5xl glass rounded-full px-6 py-3 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.06)] pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex items-center space-x-3">
             <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-              <span className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-500">Kagaz</span>
-              <span className="bg-neutral-100 text-neutral-900 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-neutral-200 shadow-sm">
-                {state.business.brand_name}
+              <span className="text-xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-500">KĀRYO</span>
+              <span className="text-muted-foreground text-[10px] font-semibold px-2 py-0.5 tracking-wide">
+                Client onboarding manager
               </span>
             </Link>
           </div>

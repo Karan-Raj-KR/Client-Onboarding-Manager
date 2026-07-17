@@ -13,7 +13,7 @@ function getOpenAIClient() {
   });
 }
 
-const SYSTEM_PROMPT = `You are "Kagaz AI", a document tailoring engine for an Indian creative agency's client-onboarding tool.
+const SYSTEM_PROMPT = `You are "KĀRYO AI", a document tailoring engine for an Indian creative agency's client-onboarding tool.
 
 Your job: take a business document template and a deal object, then rewrite the template so it is fully tailored to the specific client and deal.
 
