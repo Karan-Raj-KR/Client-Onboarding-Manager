@@ -1,15 +1,42 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Inbox, CreditCard, Settings, RefreshCw } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, Inbox, CreditCard, Settings, RefreshCw, LogOut, Loader2 } from 'lucide-react';
 import { useKagazStore, resetKagazStore, formatINRPaise, api } from '@/lib/store';
+import { createClient } from '@/lib/supabase';
 
 export default function OwnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const state = useKagazStore();
   const summary = api.getDashboardSummary();
+  const supabase = createClient();
+
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/login');
+      } else {
+        setIsAuthChecking(false);
+      }
+    };
+    checkAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        router.replace('/login');
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [router, supabase]);
 
   const navItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -22,6 +49,18 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
       resetKagazStore();
     }
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-background">
@@ -49,16 +88,21 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={handleReset}
               title="Reset Demo Data"
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-full transition-all hover:rotate-180 flex items-center gap-1.5 text-xs font-medium"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-neutral-100 rounded-full transition-all hover:rotate-180 flex items-center justify-center"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
-
-
+            <button
+              onClick={handleSignOut}
+              title="Sign Out"
+              className="p-2 text-rose-500 hover:text-white hover:bg-rose-500 rounded-full transition-all flex items-center justify-center shadow-sm border border-transparent hover:border-rose-600"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </header>
       </div>
