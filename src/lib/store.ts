@@ -417,7 +417,7 @@ const INITIAL_REMINDERS: Reminder[] = [
   },
 ];
 
-const DEFAULT_STATE: KagazState = {
+export const DEFAULT_STATE: KagazState = {
   business: INITIAL_BUSINESS,
   rateCard: INITIAL_RATE_CARD,
   deals: INITIAL_DEALS,
@@ -429,28 +429,38 @@ const DEFAULT_STATE: KagazState = {
 
 // === DATABASE ACTIONS ===
 
-const DB_KEY = 'kagaz_db_v1';
+let memoryState = DEFAULT_STATE;
 
 export function getKagazState(): KagazState {
-  if (typeof window === 'undefined') return DEFAULT_STATE;
-  const stored = window.localStorage.getItem(DB_KEY);
-  if (!stored) {
-    window.localStorage.setItem(DB_KEY, JSON.stringify(DEFAULT_STATE));
-    return DEFAULT_STATE;
-  }
+  return memoryState;
+}
+
+export async function fetchKagazState() {
+  if (typeof window === 'undefined') return;
   try {
-    return JSON.parse(stored);
+    const res = await fetch('/api/state');
+    if (res.ok) {
+      memoryState = await res.json();
+      notify();
+    }
   } catch (e) {
-    console.error('Failed to parse Kagaz DB from localStorage, resetting', e);
-    window.localStorage.setItem(DB_KEY, JSON.stringify(DEFAULT_STATE));
-    return DEFAULT_STATE;
+    console.error('Failed to fetch state from API', e);
   }
 }
 
-export function saveKagazState(state: KagazState) {
+export async function saveKagazState(state: KagazState) {
+  memoryState = state;
+  notify(); // Optimistic update
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(DB_KEY, JSON.stringify(state));
-  notify();
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+  } catch (e) {
+    console.error('Failed to save state to API', e);
+  }
 }
 
 export function resetKagazStore() {
@@ -473,12 +483,12 @@ export function notify() {
 
 export function useKagazStore() {
   const [state, setState] = useState<KagazState>(() => getKagazState());
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Initial mount hydration - deferred to a microtask to avoid synchronous render updates collision
-    queueMicrotask(() => {
-      setState(getKagazState());
-    });
+    if (!loaded) {
+      fetchKagazState().then(() => setLoaded(true));
+    }
 
     const handleUpdate = () => {
       setState(getKagazState());
@@ -486,19 +496,10 @@ export function useKagazStore() {
 
     const unsubscribe = subscribe(handleUpdate);
 
-    // Sync across open browser tabs
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === DB_KEY) {
-        handleUpdate();
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-
     return () => {
       unsubscribe();
-      window.removeEventListener('storage', handleStorage);
     };
-  }, []);
+  }, [loaded]);
 
   return state;
 }
