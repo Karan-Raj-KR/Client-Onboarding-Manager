@@ -271,7 +271,7 @@ export default function QuotePreview() {
           <div className="flex justify-between items-end border-t-2 border-border pt-8 mt-12 mb-4">
             <div className="space-y-4 w-48">
               <div className="border-b border-border/80 pb-1">
-                <input type="text" placeholder="Owner Signature..." className="w-full bg-transparent outline-none text-foreground font-signature text-2xl placeholder:text-muted-foreground/50 placeholder:font-sans placeholder:text-sm" />
+                <input type="text" placeholder="Owner Signature..." defaultValue={state.business.brand_name} className="w-full bg-transparent outline-none text-foreground font-signature text-2xl placeholder:text-muted-foreground/50 placeholder:font-sans placeholder:text-sm" />
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Authorized By</p>
@@ -280,7 +280,7 @@ export default function QuotePreview() {
             </div>
             <div className="space-y-4 w-48">
               <div className="border-b border-border/80 pb-1">
-                <input type="text" placeholder="Client Signature..." className="w-full bg-transparent outline-none text-foreground font-signature text-2xl placeholder:text-muted-foreground/50 placeholder:font-sans placeholder:text-sm" />
+                <input type="text" placeholder="Client Signature..." defaultValue={deal.client_name} className="w-full bg-transparent outline-none text-foreground font-signature text-2xl placeholder:text-muted-foreground/50 placeholder:font-sans placeholder:text-sm" />
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Accepted By</p>
