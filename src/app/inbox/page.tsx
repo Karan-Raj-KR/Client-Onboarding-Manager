@@ -115,6 +115,16 @@ export default function InboxPage() {
     },
   ];
 
+  if (!state.isLoaded) {
+    return (
+      <OwnerShell>
+        <div className="flex-1 flex flex-col items-center justify-center bg-background rounded-xl min-h-[600px] shadow-2xl border border-border/60 mb-8">
+          <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+        </div>
+      </OwnerShell>
+    );
+  }
+
   return (
     <OwnerShell>
       <div className="flex-1 flex flex-col bg-background rounded-xl overflow-hidden min-h-[600px] shadow-2xl border border-border/60 animate-in slide-in-from-bottom-8 duration-700 mb-8">

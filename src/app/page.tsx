@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Inbox, PlusCircle, CheckCircle2, AlertCircle, Clock, FileText } from 'lucide-react';
+import { ArrowRight, Inbox, PlusCircle, CheckCircle2, AlertCircle, Clock, FileText, Loader2 } from 'lucide-react';
 import { useKagazStore, api, formatINRPaise } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
@@ -71,6 +71,16 @@ export default function Dashboard() {
 
   // Check if we have active unprocessed enquiries
   const newEnquiriesCount = state.deals.filter((d) => d.status === 'New').length;
+
+  if (!state.isLoaded) {
+    return (
+      <OwnerShell>
+        <div className="flex h-[600px] w-full items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+        </div>
+      </OwnerShell>
+    );
+  }
 
   return (
     <OwnerShell>

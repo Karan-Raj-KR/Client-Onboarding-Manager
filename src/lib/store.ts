@@ -28,57 +28,54 @@ export async function fetchKagazState() {
     if (error) {
       console.warn('Supabase fetch failed during initialization', error);
     } else if (deals && Array.isArray(deals)) {
-      const localDealIds = new Set(memoryState.deals.map(d => d.id));
-      
-      const newDeals: Deal[] = [];
-      const newQuotes: Quote[] = [];
-      const newInvoices: Invoice[] = [];
-      const newPayments: Payment[] = [];
-      const newReminders: Reminder[] = [];
+      const allDeals: Deal[] = [];
+      const allQuotes: Quote[] = [];
+      const allInvoices: Invoice[] = [];
+      const allPayments: Payment[] = [];
+      const allReminders: Reminder[] = [];
       
       deals.forEach((row: any) => {
-        if (!localDealIds.has(row.id)) {
-          const dealData = row.data || {};
-          
-          const reconstructedDeal: Deal = {
-            id: row.id,
-            project_title: row.project_title,
-            client_name: row.client_name,
-            client_phone: row.client_phone,
-            scope_summary: row.scope_summary,
-            timeline_days: row.timeline_days,
-            budget_min_paise: row.budget_min_paise,
-            budget_max_paise: row.budget_max_paise,
-            missing_information: row.missing_information,
-            confidence_bps: row.confidence_bps,
-            status: row.status,
-            created_at: row.created_at,
-            enquiry_id: dealData.enquiry_id || null,
-            notes: dealData.notes || null,
-            line_items: dealData.line_items || [],
-          };
-          
-          newDeals.push(reconstructedDeal);
-          if (Array.isArray(dealData.quotes)) newQuotes.push(...dealData.quotes);
-          if (Array.isArray(dealData.invoices)) newInvoices.push(...dealData.invoices);
-          if (Array.isArray(dealData.payments)) newPayments.push(...dealData.payments);
-          if (Array.isArray(dealData.reminders)) newReminders.push(...dealData.reminders);
-        }
+        const dealData = row.data || {};
+        
+        const reconstructedDeal: Deal = {
+          id: row.id,
+          project_title: row.project_title,
+          client_name: row.client_name,
+          client_phone: row.client_phone,
+          scope_summary: row.scope_summary,
+          timeline_days: row.timeline_days,
+          budget_min_paise: row.budget_min_paise,
+          budget_max_paise: row.budget_max_paise,
+          missing_information: row.missing_information,
+          confidence_bps: row.confidence_bps,
+          status: row.status,
+          created_at: row.created_at,
+          enquiry_id: dealData.enquiry_id || null,
+          notes: dealData.notes || null,
+          line_items: dealData.line_items || [],
+        };
+        
+        allDeals.push(reconstructedDeal);
+        if (Array.isArray(dealData.quotes)) allQuotes.push(...dealData.quotes);
+        if (Array.isArray(dealData.invoices)) allInvoices.push(...dealData.invoices);
+        if (Array.isArray(dealData.payments)) allPayments.push(...dealData.payments);
+        if (Array.isArray(dealData.reminders)) allReminders.push(...dealData.reminders);
       });
       
       memoryState = {
         ...memoryState,
-        deals: [...memoryState.deals, ...newDeals].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-        quotes: [...memoryState.quotes, ...newQuotes],
-        invoices: [...memoryState.invoices, ...newInvoices],
-        payments: [...memoryState.payments, ...newPayments],
-        reminders: [...memoryState.reminders, ...newReminders],
+        deals: allDeals.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        quotes: allQuotes,
+        invoices: allInvoices,
+        payments: allPayments,
+        reminders: allReminders,
       };
     }
   } catch (e) {
     console.warn('Failed to hydrate from Supabase', e);
   }
 
+  memoryState.isLoaded = true;
   notify();
 }
 

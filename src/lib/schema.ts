@@ -113,6 +113,7 @@ export interface KagazState {
   payments: Payment[];
   reminders: Reminder[];
   templates?: any[];
+  isLoaded?: boolean;
 }
 
 // === INR FORMATTING HELPERS ===
