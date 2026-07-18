@@ -1,60 +1,195 @@
+<div align="center">
+
 # KĀRYO
+### Client Onboarding Manager
 
-> A WhatsApp enquiry in. A branded quotation, GST-ready invoice, and UPI payment link out.
+**The AI back-office for India's 15 million freelancers.**
+A client messages on WhatsApp → the quote, the GST invoice, the payment link, and a tailored contract happen by themselves.
 
-KĀRYO is an AI back-office prototype for Indian freelancers and agencies. It turns unstructured, often Hinglish, client enquiries into an editable deal and branded quotation. When the client accepts, it creates an invoice, a payment-link record, and a reminder workflow—without rebuilding the deal by hand.
+*Built in 24 hours at TakeOver'26*
 
-## Why KĀRYO?
+</div>
 
-Indian freelancers commonly sell through WhatsApp, collect through UPI, and need GST-aware documents. Most global quote-to-cash products assume forms or CRMs, USD pricing, Stripe/PayPal, and US tax workflows. KĀRYO is built around India’s working rails.
+---
 
-## Demo flow
+## The problem, in one line
 
-1. Paste a WhatsApp-style enquiry (or use the cached Hinglish transcript).
-2. Review the AI-extracted scope, budget, and timeline in the deal card.
-3. Select rate-card items and generate a branded quotation PDF.
-4. Open the public quotation link and tap **Accept**.
-5. See the invoice, UPI/payment link, armed reminder, and dashboard update.
+> Indian freelancers get client work over **WhatsApp**. Turning a messy voice note into a quote, then an invoice, then chasing payment, then sending a contract — is **hours of manual work for every single client.**
 
-## Features
+Deals die in the gap between *"I'm interested"* and *"here's your quote."* We run an agency (**KĀRYO**). We live this every week. So we automated it.
 
-- Hinglish-friendly enquiry extraction with human review
-- Rate-card pricing and branded quotation PDF
-- Public acceptance link
-- GST-ready invoice fields with SAC code support
-- Mock/Razorpay-test payment-link adapter
-- Pipeline dashboard for enquiries, quoted value, won value, and collected value
+---
+
+## What KĀRYO does
+
+You paste a messy client message. KĀRYO does the rest — automatically.
+
+```mermaid
+flowchart LR
+    A["📱 Messy WhatsApp<br/>enquiry<br/><i>(Hinglish, voice note)</i>"] --> B["🤖 AI reads it<br/>& builds a<br/>structured deal"]
+    B --> C["📄 Branded GST<br/>quotation<br/><i>in ~10 seconds</i>"]
+    C --> D["✅ Client opens link<br/>& taps ACCEPT"]
+    D --> E["⚡ Everything fires<br/>automatically"]
+
+    style A fill:#fef3c7,stroke:#d97706,color:#000
+    style B fill:#dbeafe,stroke:#2563eb,color:#000
+    style C fill:#dbeafe,stroke:#2563eb,color:#000
+    style D fill:#dcfce7,stroke:#16a34a,color:#000
+    style E fill:#fae8ff,stroke:#a21caf,color:#000
+```
+
+**The moment the client taps Accept — with no human touching anything — KĀRYO creates:**
+
+```mermaid
+flowchart TD
+    ACCEPT["✅ Client taps ACCEPT"] --> I["🧾 GST Invoice<br/>generated"]
+    ACCEPT --> P["💳 UPI / Razorpay<br/>payment link"]
+    ACCEPT --> R["🔔 Payment reminders<br/>scheduled"]
+    ACCEPT --> DOC["📑 Tailored contract<br/>from our own template"]
+    ACCEPT --> DASH["📊 Dashboard updates<br/>₹ WON in real time"]
+
+    style ACCEPT fill:#dcfce7,stroke:#16a34a,color:#000
+    style I fill:#f1f5f9,stroke:#475569,color:#000
+    style P fill:#f1f5f9,stroke:#475569,color:#000
+    style R fill:#f1f5f9,stroke:#475569,color:#000
+    style DOC fill:#f1f5f9,stroke:#475569,color:#000
+    style DASH fill:#f1f5f9,stroke:#475569,color:#000
+```
+
+---
+
+## The one feature that makes this special
+
+Most tools make you **fill a form** to build a quote. KĀRYO **reads the mess** — a rambling Hinglish voice note like:
+
+> *"bhai restaurant ke liye website chahiye, online ordering bhi, budget 30-40k, kitne din?"*
+
+…and turns it into a clean, structured, priced deal. **That's the part a form can't do — and it's the part where deals actually die.**
+
+And the documents aren't generic. **Upload your own agency templates** (contracts, onboarding docs), and the AI tailors each one to the specific client, scope, and price — automatically, the moment they accept.
+
+---
+
+## How it's built (simple version)
+
+```mermaid
+flowchart TB
+    subgraph USER["👩‍💻 The Freelancer's screen"]
+        UI["Next.js Web App<br/>Dashboard · Inbox · Deal Card"]
+    end
+
+    subgraph BRAIN["🧠 The AI"]
+        NIM["NVIDIA NIM<br/>Llama 3.3 70B<br/><i>reads enquiries,<br/>tailors documents</i>"]
+    end
+
+    subgraph STORE["💾 Data"]
+        LOCAL["Instant local state<br/><i>(fast, real-time UI)</i>"]
+        SUPA["Supabase / Postgres<br/><i>(saved history + login)</i>"]
+    end
+
+    subgraph CLIENT["📱 The Client's screen"]
+        ACCEPT["Public Accept Page<br/>Quote · Invoice · Documents"]
+    end
+
+    UI -->|"messy enquiry"| NIM
+    NIM -->|"structured deal"| UI
+    UI --> LOCAL
+    LOCAL <-->|"saves + syncs"| SUPA
+    UI -->|"sends quote link"| ACCEPT
+    ACCEPT -->|"accept triggers cascade"| LOCAL
+
+    style USER fill:#eff6ff,stroke:#2563eb,color:#000
+    style BRAIN fill:#faf5ff,stroke:#a21caf,color:#000
+    style STORE fill:#f0fdf4,stroke:#16a34a,color:#000
+    style CLIENT fill:#fffbeb,stroke:#d97706,color:#000
+```
+
+**In plain words:** the web app sends the messy message to NVIDIA's AI, gets back a clean deal, saves it to a real database, and gives the client a link. When the client accepts, everything downstream fires on its own.
+
+---
 
 ## Tech stack
 
-Next.js, TypeScript, Tailwind CSS, SQLite/Prisma, an LLM with structured JSON output, and React-pdf or server-side HTML-to-PDF. The payment and transcription integrations are adapter-based and have deterministic local fallbacks.
+| Layer | What we used | Why |
+|---|---|---|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind v4 | Fast, modern, one app |
+| **AI / LLM** | NVIDIA NIM — Llama 3.3 70B | Reads messy Hinglish → structured data; free tier, fast |
+| **Auth** | Supabase Auth (Google + Email) | Real login, no custom backend |
+| **Database** | Supabase (Postgres) | Real, persistent deal history |
+| **Documents** | HTML → PDF (print engine) | GST-format quotations & invoices |
+| **Email** | Resend | Sends the quote to the client |
+| **Deploy** | Vercel | Live, public URL |
 
-## Run locally
+---
+
+## What's real vs. what's a demo boundary
+
+We believe in being honest with judges. Here's exactly what's live and what's simulated:
+
+| Feature | Status |
+|---|---|
+| AI reading messy Hinglish enquiries | ✅ **Real** — live NVIDIA NIM API call |
+| Structured deal extraction | ✅ **Real** |
+| Branded GST-format quotation & invoice | ✅ **Real** |
+| Document tailoring from our templates | ✅ **Real** — live AI |
+| Login (Google + Email) | ✅ **Real** — Supabase Auth |
+| Saved deal history | ✅ **Real** — Supabase Postgres |
+| UPI / Razorpay **payment link** | ⚠️ **Generated, not settled** — we create the link; real money movement is a production step |
+| GST invoice | ⚠️ **Correct GST format** (GSTIN, SAC, tax split) — actual government e-filing is a production step |
+| Client data | 🧪 **Demo data only** — no real people's information |
+
+> We never move real money or file real GST during the hackathon — those are clearly marked "demo boundary" in the app.
+
+---
+
+## Why this matters (the market)
+
+- **15 million+ freelancers in India** — the 2nd largest freelance market in the world.
+- The freelance economy here is heading toward **~$25 billion by 2026.**
+- They work on **WhatsApp**, get paid on **UPI**, and need **GST** invoices.
+- The global tools (HoneyBook, Bonsai, Lindy) are built for the **US freelancer** — dollars, Stripe, US tax. **Nobody built this for India.** We did.
+
+---
+
+## Run it locally
 
 ```bash
-cd takeover
+# 1. Install
 npm install
+
+# 2. Add environment variables to .env.local
+#    NVIDIA_API_KEY=your_nvidia_nim_key
+#    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+#    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+#    RESEND_API_KEY=your_resend_key   (optional — email)
+
+# 3. Run
 npm run dev
+# open http://localhost:3000
 ```
 
-Set `LLM_API_KEY` for live extraction. The seeded/cached flow works without it. Use `PAYMENT_MODE=mock` for the hackathon demo; no real money is collected.
+---
 
-## Architecture
+## Try the demo flow
 
-```text
-Enquiry → AI extraction → editable deal → rate card → quotation PDF/public link
-                                                       ↓ accept
-                         dashboard ← invoice + payment-link record + reminder
-```
+1. Open the **WhatsApp Inbox** → pick the incoming enquiry.
+2. Hit **Process with AI** → watch it build a structured deal.
+3. Review the deal card → **Generate Quotation**.
+4. Open the **client link** → tap **Accept**.
+5. Watch the dashboard: **invoice, payment link, reminders, tailored contract — all created automatically.**
 
-## Important prototype boundaries
+---
 
-KĀRYO generates a payment link; it does not process a payment in this prototype. Invoice fields are GST-ready but this is not GST e-invoice filing or tax advice. WhatsApp ingestion and live provider integrations are planned post-hackathon.
+<div align="center">
 
-## Team
+## The team
 
-Built for TakeOver’26 by Karan Raj KR, Havinash Gangisetty, and Saagnik Dey.
+**Karan Raj KR** — Backend, AI integration, business
+**Havinash Gangisetty** — Frontend, MCP server
+**Saagnik Dey** — Integration, data, demo
 
-## Roadmap
+*Founders of KĀRYO — "Your partner in building online presence."*
 
-WhatsApp Business ingestion, real Razorpay links and webhooks, GST e-invoicing integration, vertical rate-card templates, multilingual input, and automated reminders.
+**Built with ❤️ in 24 hours at TakeOver'26**
+
+</div>
