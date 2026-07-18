@@ -23,10 +23,24 @@ export async function POST(request: Request) {
       
       // Find quote by token from quoteUrl, or by quoteNumber
       const publicTokenMatch = quoteUrl.match(/\/q\/(tok_[^/?]+)/);
+      const invoiceIdMatch = quoteUrl.match(/\/pay\/(inv_[^/?]+)/);
+      
       if (publicTokenMatch) {
         quote = state.quotes.find(q => q.public_token === publicTokenMatch[1]);
+      } else if (invoiceIdMatch) {
+        const invoice = state.invoices.find(i => i.id === invoiceIdMatch[1]);
+        if (invoice) {
+          quote = state.quotes.find(q => q.id === invoice.quote_id);
+        }
       } else if (quoteNumber) {
         quote = state.quotes.find(q => q.number === quoteNumber);
+        if (!quote) {
+          // It might be an invoice number
+          const invoice = state.invoices.find(i => i.number === quoteNumber);
+          if (invoice) {
+            quote = state.quotes.find(q => q.id === invoice.quote_id);
+          }
+        }
       }
       
       if (quote) {
@@ -136,7 +150,7 @@ export async function POST(request: Request) {
       });
 
       if (error) {
-        return NextResponse.json({ error }, { status: 400 });
+        return NextResponse.json({ error: error.message || error }, { status: 400 });
       }
 
       return NextResponse.json({ success: true, data, provider: 'resend' });
