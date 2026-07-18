@@ -84,7 +84,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'create_deal',
-        description: 'Create a new deal',
+        description: 'Create a new deal with optional line items for pricing',
         inputSchema: {
           type: 'object',
           properties: {
@@ -92,6 +92,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             project_title: { type: 'string' },
             budget_min_paise: { type: 'number' },
             budget_max_paise: { type: 'number' },
+            line_items: {
+              type: 'array',
+              description: 'Optional line items for the deal to calculate quote totals',
+              items: {
+                type: 'object',
+                properties: {
+                  description: { type: 'string' },
+                  quantity: { type: 'number', description: 'Defaults to 1' },
+                  unit_price_paise: { type: 'number', description: 'Price per unit in paise (1 INR = 100 paise)' },
+                  tax_rate_bps: { type: 'number', description: 'Tax rate in basis points (e.g., 1800 for 18%). Defaults to 1800' }
+                },
+                required: ['description', 'unit_price_paise']
+              }
+            }
           },
           required: ['client_name', 'project_title'],
         },
@@ -200,7 +214,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case 'create_deal': {
-        const { client_name, project_title, budget_min_paise, budget_max_paise } = request.params.arguments as any;
+        const { client_name, project_title, budget_min_paise, budget_max_paise, line_items } = request.params.arguments as any;
+        
+        const mappedLineItems = Array.isArray(line_items) ? line_items.map((item: any) => ({
+          id: `li_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          rate_card_item_id: '',
+          description: item.description,
+          quantity: item.quantity || 1,
+          unit_price_paise: item.unit_price_paise,
+          tax_rate_bps: item.tax_rate_bps || 1800
+        })) : [];
+
         const newDeal: Deal = {
           id: `dl_${Date.now()}`,
           enquiry_id: null,
@@ -215,7 +239,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           confidence_bps: 10000,
           missing_information: [],
           notes: null,
-          line_items: [],
+          line_items: mappedLineItems,
           created_at: new Date().toISOString()
         };
         state.deals.push(newDeal);
