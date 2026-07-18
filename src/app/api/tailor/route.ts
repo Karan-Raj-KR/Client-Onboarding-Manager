@@ -8,25 +8,12 @@ export const dynamic = 'force-dynamic';
 // Instantiate lazily so the client is only constructed when a request comes in, not during build.
 function getOpenAIClient() {
   return new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
   });
 }
 
-const SYSTEM_PROMPT = `You are "KĀRYO AI", a document tailoring engine for an Indian creative agency's client-onboarding tool.
-
-Your job: take a business document template and a deal object, then rewrite the template so it is fully tailored to the specific client and deal.
-
-Rules (strict):
-- Replace ALL placeholders (like [CLIENT NAME], [SCOPE OF WORK], [TOTAL AMOUNT], [TIMELINE], etc.) with real data from the deal object.
-- Adapt scope, payment, and timeline clauses to accurately match the deal data.
-- Format monetary amounts in Indian Rupees (₹) with proper comma formatting (e.g., ₹49,560.00). All amounts in the deal are in PAISE — divide by 100 to get rupees.
-- Keep the document's professional structure, tone, and formatting.
-- Output clean markdown only. No code fences, no commentary, no preamble.
-- Do NOT invent terms, dates, amounts, or details not supported by the deal data.
-- If a placeholder has no corresponding data in the deal, use a reasonable default like "To be confirmed" rather than leaving the placeholder raw.
-- For line items, format them as a bulleted list or table showing description, quantity, and amount.
-- Use today's date for [DATE] fields.`;
+const SYSTEM_PROMPT = `You are KĀRYO AI. You are given a business's OWN document template and a specific client deal. Return the SAME document, edited only where needed to fit this client and deal — replace placeholders and adapt client-specific details (names, scope, amounts, timeline, dates, payment terms). Preserve the template's structure, clauses, tone, and wording everywhere else. Do not add new clauses or invent terms not supported by the deal. Output clean markdown only, no code fences, no commentary.`;
 
 export async function POST(request: Request) {
   try {
@@ -39,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.NVIDIA_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { ok: false, error: 'missing key' },
         { status: 500 }
@@ -59,7 +46,7 @@ ${JSON.stringify(deal, null, 2)}
 Rewrite the template above, fully tailored to this deal. Output only the final markdown document.`;
 
     const response = await openai.chat.completions.create({
-      model: 'meta/llama-3.3-70b-instruct',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userContent },

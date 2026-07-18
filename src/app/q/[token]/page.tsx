@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ShieldCheck, Calendar, Clock, CheckCircle2, Loader2, FileCheck } from 'lucide-react';
-import { useKagazStore, acceptQuote, formatINRPaise } from '@/lib/store';
+import { useKagazStore, acceptQuote, formatINRPaise, addTailoredDocument } from '@/lib/store';
 
 export default function ClientAcceptPage() {
   const params = useParams();
@@ -23,19 +23,14 @@ export default function ClientAcceptPage() {
   const steps = [
     'Quotation accepted',
     'Generating GST-ready invoice...',
+    'Tailoring legal documents...',
     'Creating payment link...',
     'Arming reminders...',
   ];
 
-  // If quote is already accepted, check if there's an invoice and direct to it
+  // (Auto-redirect disabled so user can view tailored documents on this page)
   useEffect(() => {
-    if (quote && quote.status === 'Accepted') {
-      const invoice = state.invoices.find((i) => i.quote_id === quote.id);
-      if (invoice) {
-        // Redirect directly without animation if already accepted
-        router.push(`/pay/${invoice.id}`);
-      }
-    }
+    // Empty effect to preserve hook order
   }, [quote, state.invoices, router]);
 
   if (!quote || !deal) {
@@ -50,31 +45,68 @@ export default function ClientAcceptPage() {
   }
 
   // Run acceptance cascade
-  const handleAccept = () => {
+  const handleAccept = async () => {
     setIsAccepting(true);
     setCurrentStep(0);
 
-    // Trigger step-by-step checkmark animation
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => {
-        if (prev >= steps.length - 1) {
-          clearInterval(interval);
+    // Step 0: accepted
+    await new Promise(r => setTimeout(r, 600));
+    
+    // Step 1: invoice
+    setCurrentStep(1);
+    await new Promise(r => setTimeout(r, 600));
+
+    // Step 2: Tailoring legal documents
+    setCurrentStep(2);
+    if (state.templates && state.templates.length > 0) {
+      try {
+        await Promise.all(state.templates.map(async (tpl) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
           
-          // Trigger the atomic accept transaction
-          const result = acceptQuote(token, deal.client_name);
-          
-          // Redirect to client payment page
-          setTimeout(() => {
-            if (result) {
-              router.push(`/pay/${result.invoice.id}`);
+          try {
+            const res = await fetch('/api/tailor', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ template_body: tpl.body_markdown, deal }),
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            const data = await res.json();
+            if (data.ok && data.tailored_markdown) {
+              addTailoredDocument(deal.id, {
+                id: `tdoc_${Math.random().toString(36).substring(2, 9)}`,
+                template_id: tpl.id,
+                name: tpl.name,
+                markdown: data.tailored_markdown,
+                status: 'ready'
+              });
             }
-          }, 800);
-          
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 600);
+          } catch (err) {
+            clearTimeout(timeoutId);
+            console.error('Fetch for template failed/timed out', err);
+          }
+        }));
+      } catch (e) {
+        console.error('Tailoring failed', e);
+      }
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    // Step 3: payment link
+    setCurrentStep(3);
+    await new Promise(r => setTimeout(r, 600));
+
+    // Step 4: reminders
+    setCurrentStep(4);
+    await new Promise(r => setTimeout(r, 600));
+
+    // Finalize
+    acceptQuote(token, deal.client_name);
+    setTimeout(() => {
+      setIsAccepting(false); // Close modal and show documents
+    }, 800);
   };
 
   return (
@@ -184,17 +216,61 @@ export default function ClientAcceptPage() {
           </div>
         </div>
 
-        {/* Accept Button Footer */}
+        {/* Accept Button / Accepted State Footer */}
         <div className="p-6 border-t border-border/60 bg-neutral-50/50">
-          <button
-            onClick={handleAccept}
-            className="group relative w-full py-4 px-6 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-2xl transition-all shadow-[0_4px_14px_0_rgb(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 active:scale-95 flex items-center justify-center space-x-2 overflow-hidden"
-          >
-            {/* Shimmer effect inside button */}
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
-            <FileCheck className="w-5 h-5 relative z-10" />
-            <span className="relative z-10 text-sm tracking-wide">Accept Proposal & Generate Invoice</span>
-          </button>
+          {quote.status === 'Accepted' ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex flex-col items-center justify-center space-y-2 text-center">
+                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-900 text-sm tracking-tight">Proposal Accepted</p>
+                  <p className="text-xs text-emerald-700 font-medium">Invoice generated successfully</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const invoice = state.invoices.find((i) => i.quote_id === quote.id);
+                  if (invoice) router.push(`/pay/${invoice.id}`);
+                }}
+                className="w-full py-3 px-6 bg-neutral-900 text-white font-bold rounded-xl text-sm transition-all active:scale-95 shadow-md"
+              >
+                View Invoice & Pay
+              </button>
+
+              {deal.tailored_documents && deal.tailored_documents.length > 0 && (
+                <div className="pt-4 border-t border-border/60">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Your Documents</h4>
+                  <div className="space-y-2">
+                    {deal.tailored_documents.map(doc => (
+                      <div key={doc.id} className="flex items-center justify-between p-3 bg-white border border-border rounded-xl shadow-sm">
+                        <span className="text-sm font-bold text-foreground truncate mr-2">{doc.name}</span>
+                        <a 
+                          href={`/documents/${deal.id}/${doc.template_id}`}
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg flex-shrink-0"
+                        >
+                          View
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleAccept}
+              className="group relative w-full py-4 px-6 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-2xl transition-all shadow-[0_4px_14px_0_rgb(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.2)] hover:-translate-y-0.5 active:scale-95 flex items-center justify-center space-x-2 overflow-hidden"
+            >
+              {/* Shimmer effect inside button */}
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
+              <FileCheck className="w-5 h-5 relative z-10" />
+              <span className="relative z-10 text-sm tracking-wide">Accept Proposal & Generate Invoice</span>
+            </button>
+          )}
         </div>
 
       </div>
@@ -243,7 +319,7 @@ export default function ClientAcceptPage() {
             {currentStep === steps.length - 1 && (
               <div className="pt-4 animate-in slide-in-from-bottom-2 fade-in">
                 <p className="text-xs text-emerald-800 font-bold text-center bg-emerald-50 border border-emerald-200 py-3 px-4 rounded-xl animate-pulse shadow-inner">
-                  Invoice generated! Launching payment gateway...
+                  Finishing up...
                 </p>
               </div>
             )}

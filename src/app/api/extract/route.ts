@@ -8,18 +8,21 @@ export const dynamic = 'force-dynamic';
 // Instantiate lazily so the client is only constructed when a request comes in, not during build.
 function getOpenAIClient() {
   return new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
   });
 }
 
 const SYSTEM_PROMPT = `You are "KĀRYO AI", an extraction engine for an Indian freelancer's client-onboarding tool.
 
-Your job: read a single, often messy, Hinglish, WhatsApp-style client enquiry and return the structured deal data as ONE JSON object.
+Your job: read a client enquiry (which could be a single message, a multi-speaker call/meet transcript, or a long WhatsApp chat log) and return the structured deal data as ONE JSON object. 
 
-Output rules (strict):
+CRITICAL:
+- Identify the CLIENT's requirements and ignore the freelancer's (your user's) own lines or questions. 
+- Use the provided source context to better understand the format.
 - Return ONLY the raw JSON object. Do not include any text before or after the JSON object. Do not wrap it in markdown code fences.
-- Use exactly these keys and value types:
+
+Use exactly these keys and value types:
 
 {
   "project_title": string | null,        // short title for the work, e.g. "Restaurant Website with Online Ordering"
@@ -45,13 +48,13 @@ Do not include any text before or after the JSON object. Do not wrap it in markd
 
 export async function POST(request: Request) {
   try {
-    const { rawText } = await request.json();
+    const { rawText, sourceType = 'Raw text' } = await request.json();
 
     if (!rawText) {
       return NextResponse.json({ ok: false, error: 'Missing rawText in request body' }, { status: 400 });
     }
 
-    if (!process.env.NVIDIA_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({ ok: false, error: 'missing key' }, { status: 500 });
     }
 
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
     
     const messages: any[] = [
       { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: rawText }
+      { role: 'user', content: `[Source Context: ${sourceType}]\n\n${rawText}` }
     ];
 
     let content = '';
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
 
     try {
       const response = await openai.chat.completions.create({
-        model: 'meta/llama-3.3-70b-instruct',
+        model: 'llama-3.3-70b-versatile',
         messages,
         temperature: 0.1,
         response_format: { type: 'json_object' }
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
       });
 
       const retryResponse = await openai.chat.completions.create({
-        model: 'meta/llama-3.3-70b-instruct',
+        model: 'llama-3.3-70b-versatile',
         messages,
         temperature: 0.1,
         response_format: { type: 'json_object' }

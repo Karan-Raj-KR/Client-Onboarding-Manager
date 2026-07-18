@@ -28,57 +28,54 @@ export async function fetchKagazState() {
     if (error) {
       console.warn('Supabase fetch failed during initialization', error);
     } else if (deals && Array.isArray(deals)) {
-      const localDealIds = new Set(memoryState.deals.map(d => d.id));
-      
-      const newDeals: Deal[] = [];
-      const newQuotes: Quote[] = [];
-      const newInvoices: Invoice[] = [];
-      const newPayments: Payment[] = [];
-      const newReminders: Reminder[] = [];
+      const allDeals: Deal[] = [];
+      const allQuotes: Quote[] = [];
+      const allInvoices: Invoice[] = [];
+      const allPayments: Payment[] = [];
+      const allReminders: Reminder[] = [];
       
       deals.forEach((row: any) => {
-        if (!localDealIds.has(row.id)) {
-          const dealData = row.data || {};
-          
-          const reconstructedDeal: Deal = {
-            id: row.id,
-            project_title: row.project_title,
-            client_name: row.client_name,
-            client_phone: row.client_phone,
-            scope_summary: row.scope_summary,
-            timeline_days: row.timeline_days,
-            budget_min_paise: row.budget_min_paise,
-            budget_max_paise: row.budget_max_paise,
-            missing_information: row.missing_information,
-            confidence_bps: row.confidence_bps,
-            status: row.status,
-            created_at: row.created_at,
-            enquiry_id: dealData.enquiry_id || null,
-            notes: dealData.notes || null,
-            line_items: dealData.line_items || [],
-          };
-          
-          newDeals.push(reconstructedDeal);
-          if (Array.isArray(dealData.quotes)) newQuotes.push(...dealData.quotes);
-          if (Array.isArray(dealData.invoices)) newInvoices.push(...dealData.invoices);
-          if (Array.isArray(dealData.payments)) newPayments.push(...dealData.payments);
-          if (Array.isArray(dealData.reminders)) newReminders.push(...dealData.reminders);
-        }
+        const dealData = row.data || {};
+        
+        const reconstructedDeal: Deal = {
+          id: row.id,
+          project_title: row.project_title,
+          client_name: row.client_name,
+          client_phone: row.client_phone,
+          scope_summary: row.scope_summary,
+          timeline_days: row.timeline_days,
+          budget_min_paise: row.budget_min_paise,
+          budget_max_paise: row.budget_max_paise,
+          missing_information: row.missing_information,
+          confidence_bps: row.confidence_bps,
+          status: row.status,
+          created_at: row.created_at,
+          enquiry_id: dealData.enquiry_id || null,
+          notes: dealData.notes || null,
+          line_items: dealData.line_items || [],
+        };
+        
+        allDeals.push(reconstructedDeal);
+        if (Array.isArray(dealData.quotes)) allQuotes.push(...dealData.quotes);
+        if (Array.isArray(dealData.invoices)) allInvoices.push(...dealData.invoices);
+        if (Array.isArray(dealData.payments)) allPayments.push(...dealData.payments);
+        if (Array.isArray(dealData.reminders)) allReminders.push(...dealData.reminders);
       });
       
       memoryState = {
         ...memoryState,
-        deals: [...memoryState.deals, ...newDeals].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-        quotes: [...memoryState.quotes, ...newQuotes],
-        invoices: [...memoryState.invoices, ...newInvoices],
-        payments: [...memoryState.payments, ...newPayments],
-        reminders: [...memoryState.reminders, ...newReminders],
+        deals: allDeals.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        quotes: allQuotes,
+        invoices: allInvoices,
+        payments: allPayments,
+        reminders: allReminders,
       };
     }
   } catch (e) {
     console.warn('Failed to hydrate from Supabase', e);
   }
 
+  memoryState.isLoaded = true;
   notify();
 }
 
@@ -305,6 +302,109 @@ export async function extractDealWithAI(dealId: string): Promise<Deal | null> {
 }
 
 /**
+ * Creates a new deal directly from raw enquiry text and simulated AI extraction
+ */
+export async function processNewEnquiry(rawText: string, sourceType: string): Promise<string> {
+  const state = getKagazState();
+  
+  const newDealId = `dl_${Date.now()}`;
+  const initialDeal: Deal = {
+    id: newDealId,
+    enquiry_id: null,
+    status: 'New',
+    created_at: new Date().toISOString(),
+    project_title: 'New Enquiry',
+    client_name: 'Unknown Client',
+    client_phone: '',
+    scope_summary: '',
+    budget_min_paise: 0,
+    budget_max_paise: 0,
+    timeline_days: 0,
+    confidence_bps: 0,
+    missing_information: [],
+    line_items: FALLBACK_DEMO_EXTRACTION.line_items,
+    notes: rawText,
+  };
+
+  let extractionData = FALLBACK_DEMO_EXTRACTION;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rawText, sourceType }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok && json.data) {
+        let parsedData = json.data;
+        if (typeof parsedData === 'string') {
+          let cleanStr = parsedData.trim();
+          if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+          else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+          if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+          cleanStr = cleanStr.trim();
+          parsedData = JSON.parse(cleanStr);
+        }
+        
+        extractionData = {
+          ...FALLBACK_DEMO_EXTRACTION,
+          project_title: parsedData.project_title ?? '',
+          client_name: parsedData.client_name ?? '',
+          scope_summary: parsedData.scope_summary ?? '',
+          budget_min_paise: typeof parsedData.budget_min_paise === 'number' ? parsedData.budget_min_paise : 0,
+          budget_max_paise: typeof parsedData.budget_max_paise === 'number' ? parsedData.budget_max_paise : 0,
+          timeline_days: typeof parsedData.timeline_days === 'number' ? parsedData.timeline_days : 0,
+          confidence_bps: typeof parsedData.confidence_bps === 'number' ? parsedData.confidence_bps : 0,
+        };
+        
+        if (typeof parsedData.client_phone === 'string') {
+          (extractionData as any).client_phone = parsedData.client_phone;
+        } else {
+          (extractionData as any).client_phone = '';
+        }
+
+        if (Array.isArray(parsedData.missing_information)) {
+          (extractionData as any).missing_information = parsedData.missing_information;
+        }
+      } else {
+        console.error('API /extract returned ok: false', json);
+      }
+    } else {
+      console.error('Fetch to /api/extract failed with status:', res.status);
+    }
+  } catch (error) {
+    console.error('Fetch to /api/extract failed or timed out:', error);
+  }
+
+  const updatedDeal: Deal = {
+    ...initialDeal,
+    status: 'Extracted',
+    ...extractionData,
+  };
+  
+  if ((extractionData as any).missing_information) {
+    updatedDeal.missing_information = (extractionData as any).missing_information;
+  }
+
+  saveKagazState({
+    ...state,
+    deals: [updatedDeal, ...state.deals],
+  });
+
+  syncDealToSupabase(updatedDeal.id);
+
+  return updatedDeal.id;
+}
+
+/**
  * Updates a draft deal details and its line items
  */
 export function updateDeal(dealId: string, updates: Partial<Deal>): Deal | null {
@@ -498,6 +598,36 @@ export function acceptQuote(publicToken: string, acceptedByName: string): {
     payment: newPayment,
     reminder: newReminder,
   };
+}
+
+/**
+ * Attaches an AI-tailored document to a deal
+ */
+export function addTailoredDocument(dealId: string, document: { id: string; template_id: string; name: string; markdown: string; status: 'ready' }) {
+  const state = getKagazState();
+  const dealIndex = state.deals.findIndex((d) => d.id === dealId);
+  if (dealIndex === -1) return;
+
+  const deal = state.deals[dealIndex];
+  // Check if document with this template_id already exists to prevent duplicates during testing/retries
+  if (deal.tailored_documents?.some(d => d.template_id === document.template_id)) {
+    return;
+  }
+
+  const updatedDeal = {
+    ...deal,
+    tailored_documents: [...(deal.tailored_documents || []), document],
+  };
+
+  const newDeals = [...state.deals];
+  newDeals[dealIndex] = updatedDeal;
+
+  saveKagazState({
+    ...state,
+    deals: newDeals,
+  });
+
+  syncDealToSupabase(dealId);
 }
 
 /**
