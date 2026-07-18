@@ -184,9 +184,9 @@ npm run dev
 
 ## The team
 
-**Karan Raj KR** — Backend, AI integration, business
-**Havinash Gangisetty** — Frontend, MCP server
-**Saagnik Dey** — Integration, data, demo
+**Karan Raj KR** — Backend, AI integration, Integration, data, demo
+**Havinash Gangisetty** — MCP server, business
+**Saagnik Dey** — Frontend
 
 *Founders of KĀRYO — "Your partner in building online presence."*
 
