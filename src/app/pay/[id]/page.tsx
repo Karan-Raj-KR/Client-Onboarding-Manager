@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Printer, CheckCircle, CreditCard, AlertCircle } from 'lucide-react';
+import { Printer, CheckCircle, CreditCard, AlertCircle, Loader2 } from 'lucide-react';
 import { useKagazStore, simulatePayment, formatINRPaise, paiseToRupee } from '@/lib/store';
 
 export default function ClientPaymentPage() {
@@ -16,8 +16,24 @@ export default function ClientPaymentPage() {
   const deal = state.deals.find((d) => d.id === quote?.deal_id);
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Give the store some time to hydrate from Supabase before showing error
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!invoice || !quote || !deal) {
+    if (!isLoaded) {
+      return (
+        <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-4">
+          <Loader2 className="w-8 h-8 text-neutral-400 animate-spin mb-4" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading invoice...</p>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
         <div className="p-10 text-center glass rounded-3xl animate-in fade-in max-w-md mx-auto">

@@ -77,7 +77,8 @@ export default function QuotePreview() {
       if (res.ok) {
         alert('Email sent successfully!');
       } else {
-        alert('Failed to send email. Ensure Gmail credentials (GMAIL_USER, GMAIL_APP_PASSWORD) are configured in .env.local.');
+        const data = await res.json().catch(() => ({}));
+        alert(`Failed to send email: ${data.error || 'Please check your configuration or server logs.'}`);
       }
     } catch (e) {
       alert('Error sending email.');

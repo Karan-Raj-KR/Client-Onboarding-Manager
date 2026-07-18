@@ -5,7 +5,56 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { getServerState, setServerState } from './lib/server-db';
-import { Deal, Quote, Invoice } from './lib/store';
+import { Deal, Quote, Invoice, KagazState } from './lib/store';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+async function syncDealToSupabase(state: KagazState, dealId: string) {
+  if (!supabase) return;
+  try {
+    const deal = state.deals.find(d => d.id === dealId);
+    if (!deal) return;
+    
+    const quotes = state.quotes.filter(q => q.deal_id === dealId);
+    const quoteIds = quotes.map(q => q.id);
+    const invoices = state.invoices.filter(i => quoteIds.includes(i.quote_id));
+    const invoiceIds = invoices.map(i => i.id);
+    const payments = state.payments.filter(p => invoiceIds.includes(p.invoice_id));
+    const reminders = state.reminders.filter(r => invoiceIds.includes(r.invoice_id));
+
+    const payload = {
+      id: deal.id,
+      project_title: deal.project_title,
+      client_name: deal.client_name,
+      client_phone: deal.client_phone,
+      scope_summary: deal.scope_summary,
+      timeline_days: deal.timeline_days,
+      budget_min_paise: deal.budget_min_paise,
+      budget_max_paise: deal.budget_max_paise,
+      missing_information: deal.missing_information,
+      confidence_bps: deal.confidence_bps,
+      status: deal.status,
+      data: {
+        enquiry_id: deal.enquiry_id,
+        notes: deal.notes,
+        line_items: deal.line_items,
+        quotes,
+        invoices,
+        payments,
+        reminders
+      }
+    };
+    
+    await supabase.from('deals').upsert(payload);
+  } catch (error) {
+    console.error('Failed to sync to Supabase from MCP', error);
+  }
+}
 
 const server = new Server(
   {
@@ -171,6 +220,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
         state.deals.push(newDeal);
         setServerState(state);
+        await syncDealToSupabase(state, newDeal.id);
         return { content: [{ type: 'text', text: `Created deal ${newDeal.id}` }] };
       }
 
@@ -180,6 +230,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!deal) throw new Error(`Deal ${deal_id} not found.`);
         deal.status = status;
         setServerState(state);
+        await syncDealToSupabase(state, deal.id);
         return { content: [{ type: 'text', text: `Deal ${deal_id} updated to ${status}.` }] };
       }
 
@@ -214,7 +265,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         deal.status = 'Quoted';
         state.quotes.push(newQuote);
         setServerState(state);
-        return { content: [{ type: 'text', text: `Quote ${newQuote.id} created for Deal ${deal.id}. Public link: http://localhost:3000/q/${newQuote.public_token}` }] };
+        await syncDealToSupabase(state, deal.id);
+        return { content: [{ type: 'text', text: `Quote ${newQuote.id} created for Deal ${deal.id}. Public link: ${process.env.PUBLIC_APP_URL || 'http://localhost:3000'}/q/${newQuote.public_token}` }] };
       }
 
       case 'accept_quote': {
@@ -224,8 +276,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         quote.status = 'Accepted';
         quote.accepted_at = new Date().toISOString();
         const deal = state.deals.find(d => d.id === quote.deal_id);
-        if (deal) deal.status = 'Accepted';
-        setServerState(state);
+        if (deal) {
+          deal.status = 'Accepted';
+          setServerState(state);
+          await syncDealToSupabase(state, deal.id);
+        } else {
+          setServerState(state);
+        }
         return { content: [{ type: 'text', text: `Quote ${quote.id} accepted` }] };
       }
 
@@ -249,10 +306,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
 
         const deal = state.deals.find(d => d.id === quote.deal_id);
-        if (deal) deal.status = 'Payment Pending';
-        
-        state.invoices.push(newInvoice);
-        setServerState(state);
+        if (deal) {
+          deal.status = 'Payment Pending';
+          state.invoices.push(newInvoice);
+          setServerState(state);
+          await syncDealToSupabase(state, deal.id);
+        } else {
+          state.invoices.push(newInvoice);
+          setServerState(state);
+        }
         return { content: [{ type: 'text', text: `Invoice ${newInvoice.id} created from Quote ${quote.id}` }] };
       }
 
@@ -273,10 +335,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           paid_at: new Date().toISOString()
         });
 
-        const quote = state.quotes.find(q => q.id === invoice.quote_id);
         if (quote) {
           const deal = state.deals.find(d => d.id === quote.deal_id);
-          if (deal) deal.status = 'Paid';
+          if (deal) {
+            deal.status = 'Paid';
+            setServerState(state);
+            await syncDealToSupabase(state, deal.id);
+            return { content: [{ type: 'text', text: `Invoice ${invoice.id} marked as paid` }] };
+          }
         }
 
         setServerState(state);

@@ -19,6 +19,7 @@ export default function ClientAcceptPage() {
   // Animation cascade state
   const [isAccepting, setIsAccepting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const steps = [
     'Quotation accepted',
@@ -29,11 +30,28 @@ export default function ClientAcceptPage() {
   ];
 
   // (Auto-redirect disabled so user can view tailored documents on this page)
+  
+  // Give the store some time to hydrate from Supabase before showing error
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If quote is already accepted, check if there's an invoice and direct to it
   useEffect(() => {
     // Empty effect to preserve hook order
   }, [quote, state.invoices, router]);
 
   if (!quote || !deal) {
+    if (!isLoaded) {
+      return (
+        <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-4">
+          <Loader2 className="w-8 h-8 text-neutral-400 animate-spin mb-4" />
+          <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading proposal...</p>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
         <div className="p-10 text-center glass rounded-3xl animate-in fade-in max-w-md mx-auto">

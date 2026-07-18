@@ -28,11 +28,11 @@ export async function fetchKagazState() {
     if (error) {
       console.warn('Supabase fetch failed during initialization', error);
     } else if (deals && Array.isArray(deals)) {
-      const allDeals: Deal[] = [];
-      const allQuotes: Quote[] = [];
-      const allInvoices: Invoice[] = [];
-      const allPayments: Payment[] = [];
-      const allReminders: Reminder[] = [];
+      const newDealsMap = new Map(memoryState.deals.map(d => [d.id, d]));
+      const newQuotesMap = new Map(memoryState.quotes.map(q => [q.id, q]));
+      const newInvoicesMap = new Map(memoryState.invoices.map(i => [i.id, i]));
+      const newPaymentsMap = new Map(memoryState.payments.map(p => [p.id, p]));
+      const newRemindersMap = new Map(memoryState.reminders.map(r => [r.id, r]));
       
       deals.forEach((row: any) => {
         const dealData = row.data || {};
@@ -55,20 +55,20 @@ export async function fetchKagazState() {
           line_items: dealData.line_items || [],
         };
         
-        allDeals.push(reconstructedDeal);
-        if (Array.isArray(dealData.quotes)) allQuotes.push(...dealData.quotes);
-        if (Array.isArray(dealData.invoices)) allInvoices.push(...dealData.invoices);
-        if (Array.isArray(dealData.payments)) allPayments.push(...dealData.payments);
-        if (Array.isArray(dealData.reminders)) allReminders.push(...dealData.reminders);
+        newDealsMap.set(row.id, reconstructedDeal);
+        if (Array.isArray(dealData.quotes)) dealData.quotes.forEach((q: any) => newQuotesMap.set(q.id, q));
+        if (Array.isArray(dealData.invoices)) dealData.invoices.forEach((i: any) => newInvoicesMap.set(i.id, i));
+        if (Array.isArray(dealData.payments)) dealData.payments.forEach((p: any) => newPaymentsMap.set(p.id, p));
+        if (Array.isArray(dealData.reminders)) dealData.reminders.forEach((r: any) => newRemindersMap.set(r.id, r));
       });
       
       memoryState = {
         ...memoryState,
-        deals: allDeals.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-        quotes: allQuotes,
-        invoices: allInvoices,
-        payments: allPayments,
-        reminders: allReminders,
+        deals: Array.from(newDealsMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        quotes: Array.from(newQuotesMap.values()),
+        invoices: Array.from(newInvoicesMap.values()),
+        payments: Array.from(newPaymentsMap.values()),
+        reminders: Array.from(newRemindersMap.values()),
       };
     }
   } catch (e) {
