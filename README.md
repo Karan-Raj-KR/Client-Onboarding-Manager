@@ -79,7 +79,7 @@ flowchart TB
     end
 
     subgraph BRAIN["🧠 The AI"]
-        NIM["NVIDIA NIM<br/>Llama 3.3 70B<br/><i>reads enquiries,<br/>tailors documents</i>"]
+        NIM["Groq<br/>Llama 3.3 70B<br/><i>reads enquiries,<br/>tailors documents</i>"]
     end
 
     subgraph STORE["💾 Data"]
@@ -104,7 +104,7 @@ flowchart TB
     style CLIENT fill:#fffbeb,stroke:#d97706,color:#000
 ```
 
-**In plain words:** the web app sends the messy message to NVIDIA's AI, gets back a clean deal, saves it to a real database, and gives the client a link. When the client accepts, everything downstream fires on its own.
+**In plain words:** the web app sends the messy message to Groq's AI, gets back a clean deal, saves it to a real database, and gives the client a link. When the client accepts, everything downstream fires on its own.
 
 ---
 
@@ -113,11 +113,11 @@ flowchart TB
 | Layer | What we used | Why |
 |---|---|---|
 | **Frontend** | Next.js 16, React 19, TypeScript, Tailwind v4 | Fast, modern, one app |
-| **AI / LLM** | NVIDIA NIM — Llama 3.3 70B | Reads messy Hinglish → structured data; free tier, fast |
+| **AI / LLM** | Groq — Llama 3.3 70B | Reads messy Hinglish → structured data; free tier, fast |
 | **Auth** | Supabase Auth (Google + Email) | Real login, no custom backend |
 | **Database** | Supabase (Postgres) | Real, persistent deal history |
 | **Documents** | HTML → PDF (print engine) | GST-format quotations & invoices |
-| **Email** | Resend | Sends the quote to the client |
+| **Email** | Gmail SMTP (Nodemailer) | Sends the quote to the client |
 | **Deploy** | Vercel | Live, public URL |
 
 ---
@@ -128,7 +128,7 @@ We believe in being honest with judges. Here's exactly what's live and what's si
 
 | Feature | Status |
 |---|---|
-| AI reading messy Hinglish enquiries | ✅ **Real** — live NVIDIA NIM API call |
+| AI reading messy Hinglish enquiries | ✅ **Real** — live Groq API call |
 | Structured deal extraction | ✅ **Real** |
 | Branded GST-format quotation & invoice | ✅ **Real** |
 | Document tailoring from our templates | ✅ **Real** — live AI |
@@ -158,10 +158,11 @@ We believe in being honest with judges. Here's exactly what's live and what's si
 npm install
 
 # 2. Add environment variables to .env.local
-#    NVIDIA_API_KEY=your_nvidia_nim_key
+#    GROQ_API_KEY=your_groq_key
 #    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 #    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-#    RESEND_API_KEY=your_resend_key   (optional — email)
+#    GMAIL_USER=your_gmail_address        (optional — email)
+#    GMAIL_APP_PASSWORD=your_gmail_app_password   (optional — email)
 
 # 3. Run
 npm run dev
