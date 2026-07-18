@@ -104,6 +104,12 @@ export interface Reminder {
   body: string;
 }
 
+export interface Template {
+  id: string;
+  name: string;
+  body_markdown: string;
+}
+
 export interface KagazState {
   business: BusinessProfile;
   rateCard: RateCardItem[];
@@ -112,7 +118,7 @@ export interface KagazState {
   invoices: Invoice[];
   payments: Payment[];
   reminders: Reminder[];
-  templates?: any[];
+  templates: Template[];
   isLoaded?: boolean;
 }
 
@@ -418,6 +424,14 @@ const INITIAL_REMINDERS: Reminder[] = [
   },
 ];
 
+const INITIAL_TEMPLATES: Template[] = [
+  {
+    id: 'tpl_demo',
+    name: 'Standard Service Agreement',
+    body_markdown: `# Service Agreement\n\nThis Service Agreement is entered into by and between [YOUR COMPANY NAME] and [CLIENT NAME] on [DATE].\n\n## 1. Scope of Work\nThe Service Provider agrees to deliver the following project: **[PROJECT TITLE]**.\n\n[SCOPE OF WORK]\n\n## 2. Timeline\nThe estimated timeline for completion is [TIMELINE].\n\n## 3. Compensation\nThe total compensation for the services described above is [TOTAL AMOUNT] (excluding GST). Payment terms are strictly as per the generated invoice.\n\n## 4. Acceptance\nBy accepting this proposal, the Client agrees to the terms and conditions outlined in this document.\n\n---\n*Signed digitally by KĀRYO system upon quote acceptance.*`
+  }
+];
+
 export const DEFAULT_STATE: KagazState = {
   business: INITIAL_BUSINESS,
   rateCard: INITIAL_RATE_CARD,
@@ -426,6 +440,7 @@ export const DEFAULT_STATE: KagazState = {
   invoices: INITIAL_INVOICES,
   payments: INITIAL_PAYMENTS,
   reminders: INITIAL_REMINDERS,
+  templates: INITIAL_TEMPLATES,
 };
 
 // === DATABASE ACTIONS ===
