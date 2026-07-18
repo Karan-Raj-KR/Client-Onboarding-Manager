@@ -10,11 +10,11 @@ export async function POST(request: Request) {
     const { to, subject, quoteNumber, quoteUrl, clientName, brandName } = await request.json();
 
     if (!to || !quoteUrl) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
     }
 
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      return NextResponse.json({ error: 'missing gmail credentials in .env.local' }, { status: 500 });
+      return NextResponse.json({ ok: false, error: 'missing gmail credentials in .env.local' }, { status: 500 });
     }
 
     const transporter = nodemailer.createTransport({
