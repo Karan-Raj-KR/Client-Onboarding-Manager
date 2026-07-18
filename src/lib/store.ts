@@ -603,7 +603,7 @@ export function acceptQuote(publicToken: string, acceptedByName: string): {
 /**
  * Attaches an AI-tailored document to a deal
  */
-export function addTailoredDocument(dealId: string, document: { id: string; template_id: string; name: string; body_markdown: string }) {
+export function addTailoredDocument(dealId: string, document: { id: string; template_id: string; name: string; markdown: string; status: 'ready' }) {
   const state = getKagazState();
   const dealIndex = state.deals.findIndex((d) => d.id === dealId);
   if (dealIndex === -1) return;
