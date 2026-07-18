@@ -9,7 +9,7 @@ import { Deal, Quote, Invoice } from './lib/store';
 
 const server = new Server(
   {
-    name: 'kagaz-mcp-server',
+    name: 'karyo-mcp-server',
     version: '1.0.0',
   },
   {
