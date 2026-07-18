@@ -335,6 +335,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           paid_at: new Date().toISOString()
         });
 
+        const quote = state.quotes.find(q => q.id === invoice.quote_id);
         if (quote) {
           const deal = state.deals.find(d => d.id === quote.deal_id);
           if (deal) {
