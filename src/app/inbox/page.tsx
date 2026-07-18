@@ -54,10 +54,15 @@ export default function InboxPage() {
       setExtractionStep((prev) => (prev + 1) % extractionLogs.length);
     }, 1500);
 
-    const dealId = await processNewEnquiry(rawText, sourceType);
-
-    clearInterval(stepInterval);
-    router.push(`/deals/${dealId}`);
+    try {
+      const dealId = await processNewEnquiry(rawText, sourceType);
+      router.push(`/deals/${dealId}`);
+    } catch (error: any) {
+      alert(error?.message || 'AI extraction failed. Please try again.');
+      setIsExtracting(false);
+    } finally {
+      clearInterval(stepInterval);
+    }
   };
 
   if (!state.isLoaded) {

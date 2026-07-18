@@ -326,73 +326,57 @@ export async function processNewEnquiry(rawText: string, sourceType: string): Pr
     notes: rawText,
   };
 
-  let extractionData = FALLBACK_DEMO_EXTRACTION;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+  let res: Response;
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    const res = await fetch('/api/extract', {
+    res = await fetch('/api/extract', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rawText, sourceType }),
       signal: controller.signal
     });
-    
+  } catch (error: any) {
     clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const json = await res.json();
-      if (json.ok && json.data) {
-        let parsedData = json.data;
-        if (typeof parsedData === 'string') {
-          let cleanStr = parsedData.trim();
-          if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
-          else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
-          if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
-          cleanStr = cleanStr.trim();
-          parsedData = JSON.parse(cleanStr);
-        }
-        
-        extractionData = {
-          ...FALLBACK_DEMO_EXTRACTION,
-          project_title: parsedData.project_title ?? '',
-          client_name: parsedData.client_name ?? '',
-          scope_summary: parsedData.scope_summary ?? '',
-          budget_min_paise: typeof parsedData.budget_min_paise === 'number' ? parsedData.budget_min_paise : 0,
-          budget_max_paise: typeof parsedData.budget_max_paise === 'number' ? parsedData.budget_max_paise : 0,
-          timeline_days: typeof parsedData.timeline_days === 'number' ? parsedData.timeline_days : 0,
-          confidence_bps: typeof parsedData.confidence_bps === 'number' ? parsedData.confidence_bps : 0,
-        };
-        
-        if (typeof parsedData.client_phone === 'string') {
-          (extractionData as any).client_phone = parsedData.client_phone;
-        } else {
-          (extractionData as any).client_phone = '';
-        }
-
-        if (Array.isArray(parsedData.missing_information)) {
-          (extractionData as any).missing_information = parsedData.missing_information;
-        }
-      } else {
-        console.error('API /extract returned ok: false', json);
-      }
-    } else {
-      console.error('Fetch to /api/extract failed with status:', res.status);
-    }
-  } catch (error) {
-    console.error('Fetch to /api/extract failed or timed out:', error);
+    throw new Error(error?.name === 'AbortError' ? 'AI extraction timed out. Please try again.' : 'Could not reach the AI extraction service.');
   }
+  clearTimeout(timeoutId);
+
+  const json = await res.json().catch(() => ({}));
+
+  if (!res.ok || !json.ok || !json.data) {
+    throw new Error(json.error || `AI extraction failed (status ${res.status}).`);
+  }
+
+  let parsedData = json.data;
+  if (typeof parsedData === 'string') {
+    let cleanStr = parsedData.trim();
+    if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+    else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+    if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+    cleanStr = cleanStr.trim();
+    parsedData = JSON.parse(cleanStr);
+  }
+
+  const extractionData = {
+    ...FALLBACK_DEMO_EXTRACTION,
+    project_title: parsedData.project_title ?? '',
+    client_name: parsedData.client_name ?? '',
+    scope_summary: parsedData.scope_summary ?? '',
+    budget_min_paise: typeof parsedData.budget_min_paise === 'number' ? parsedData.budget_min_paise : 0,
+    budget_max_paise: typeof parsedData.budget_max_paise === 'number' ? parsedData.budget_max_paise : 0,
+    timeline_days: typeof parsedData.timeline_days === 'number' ? parsedData.timeline_days : 0,
+    confidence_bps: typeof parsedData.confidence_bps === 'number' ? parsedData.confidence_bps : 0,
+    client_phone: typeof parsedData.client_phone === 'string' ? parsedData.client_phone : '',
+    missing_information: Array.isArray(parsedData.missing_information) ? parsedData.missing_information : [],
+  };
 
   const updatedDeal: Deal = {
     ...initialDeal,
     status: 'Extracted',
     ...extractionData,
   };
-  
-  if ((extractionData as any).missing_information) {
-    updatedDeal.missing_information = (extractionData as any).missing_information;
-  }
 
   saveKagazState({
     ...state,
