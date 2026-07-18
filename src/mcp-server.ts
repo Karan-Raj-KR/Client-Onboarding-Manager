@@ -290,14 +290,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const deal = state.deals.find(d => d.id === quote.deal_id);
         
         try {
-          const response = await fetch('http://localhost:3000/api/send', {
+          const baseUrl = process.env.PUBLIC_APP_URL || 'https://karyo-client-onboarding-manager.vercel.app';
+          const response = await fetch(`http://localhost:3000/api/send`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               to: to_email,
               subject: `Your Quotation for ${deal?.project_title || 'Project'}`,
               quoteNumber: quote.number,
-              quoteUrl: `http://localhost:3000/q/${quote.public_token}`,
+              quoteUrl: `${baseUrl}/q/${quote.public_token}`,
               clientName: deal?.client_name,
               brandName: state.business.brand_name
             })
