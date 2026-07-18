@@ -601,6 +601,36 @@ export function acceptQuote(publicToken: string, acceptedByName: string): {
 }
 
 /**
+ * Attaches an AI-tailored document to a deal
+ */
+export function addTailoredDocument(dealId: string, document: { id: string; template_id: string; name: string; body_markdown: string }) {
+  const state = getKagazState();
+  const dealIndex = state.deals.findIndex((d) => d.id === dealId);
+  if (dealIndex === -1) return;
+
+  const deal = state.deals[dealIndex];
+  // Check if document with this template_id already exists to prevent duplicates during testing/retries
+  if (deal.tailored_documents?.some(d => d.template_id === document.template_id)) {
+    return;
+  }
+
+  const updatedDeal = {
+    ...deal,
+    tailored_documents: [...(deal.tailored_documents || []), document],
+  };
+
+  const newDeals = [...state.deals];
+  newDeals[dealIndex] = updatedDeal;
+
+  saveKagazState({
+    ...state,
+    deals: newDeals,
+  });
+
+  syncDealToSupabase(dealId);
+}
+
+/**
  * Simulates client payment completion
  */
 export function simulatePayment(invoiceId: string): Invoice | null {
