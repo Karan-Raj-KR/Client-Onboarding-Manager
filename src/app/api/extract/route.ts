@@ -15,11 +15,14 @@ function getOpenAIClient() {
 
 const SYSTEM_PROMPT = `You are "KĀRYO AI", an extraction engine for an Indian freelancer's client-onboarding tool.
 
-Your job: read a single, often messy, Hinglish, WhatsApp-style client enquiry and return the structured deal data as ONE JSON object.
+Your job: read a client enquiry (which could be a single message, a multi-speaker call/meet transcript, or a long WhatsApp chat log) and return the structured deal data as ONE JSON object. 
 
-Output rules (strict):
+CRITICAL:
+- Identify the CLIENT's requirements and ignore the freelancer's (your user's) own lines or questions. 
+- Use the provided source context to better understand the format.
 - Return ONLY the raw JSON object. Do not include any text before or after the JSON object. Do not wrap it in markdown code fences.
-- Use exactly these keys and value types:
+
+Use exactly these keys and value types:
 
 {
   "project_title": string | null,        // short title for the work, e.g. "Restaurant Website with Online Ordering"
@@ -45,7 +48,7 @@ Do not include any text before or after the JSON object. Do not wrap it in markd
 
 export async function POST(request: Request) {
   try {
-    const { rawText } = await request.json();
+    const { rawText, sourceType = 'Raw text' } = await request.json();
 
     if (!rawText) {
       return NextResponse.json({ ok: false, error: 'Missing rawText in request body' }, { status: 400 });
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
     
     const messages: any[] = [
       { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: rawText }
+      { role: 'user', content: `[Source Context: ${sourceType}]\n\n${rawText}` }
     ];
 
     let content = '';

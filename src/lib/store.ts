@@ -302,6 +302,109 @@ export async function extractDealWithAI(dealId: string): Promise<Deal | null> {
 }
 
 /**
+ * Creates a new deal directly from raw enquiry text and simulated AI extraction
+ */
+export async function processNewEnquiry(rawText: string, sourceType: string): Promise<string> {
+  const state = getKagazState();
+  
+  const newDealId = `dl_${Date.now()}`;
+  const initialDeal: Deal = {
+    id: newDealId,
+    enquiry_id: null,
+    status: 'New',
+    created_at: new Date().toISOString(),
+    project_title: 'New Enquiry',
+    client_name: 'Unknown Client',
+    client_phone: '',
+    scope_summary: '',
+    budget_min_paise: 0,
+    budget_max_paise: 0,
+    timeline_days: 0,
+    confidence_bps: 0,
+    missing_information: [],
+    line_items: FALLBACK_DEMO_EXTRACTION.line_items,
+    notes: rawText,
+  };
+
+  let extractionData = FALLBACK_DEMO_EXTRACTION;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rawText, sourceType }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.ok && json.data) {
+        let parsedData = json.data;
+        if (typeof parsedData === 'string') {
+          let cleanStr = parsedData.trim();
+          if (cleanStr.startsWith('```json')) cleanStr = cleanStr.substring(7);
+          else if (cleanStr.startsWith('```')) cleanStr = cleanStr.substring(3);
+          if (cleanStr.endsWith('```')) cleanStr = cleanStr.substring(0, cleanStr.length - 3);
+          cleanStr = cleanStr.trim();
+          parsedData = JSON.parse(cleanStr);
+        }
+        
+        extractionData = {
+          ...FALLBACK_DEMO_EXTRACTION,
+          project_title: parsedData.project_title ?? '',
+          client_name: parsedData.client_name ?? '',
+          scope_summary: parsedData.scope_summary ?? '',
+          budget_min_paise: typeof parsedData.budget_min_paise === 'number' ? parsedData.budget_min_paise : 0,
+          budget_max_paise: typeof parsedData.budget_max_paise === 'number' ? parsedData.budget_max_paise : 0,
+          timeline_days: typeof parsedData.timeline_days === 'number' ? parsedData.timeline_days : 0,
+          confidence_bps: typeof parsedData.confidence_bps === 'number' ? parsedData.confidence_bps : 0,
+        };
+        
+        if (typeof parsedData.client_phone === 'string') {
+          (extractionData as any).client_phone = parsedData.client_phone;
+        } else {
+          (extractionData as any).client_phone = '';
+        }
+
+        if (Array.isArray(parsedData.missing_information)) {
+          (extractionData as any).missing_information = parsedData.missing_information;
+        }
+      } else {
+        console.error('API /extract returned ok: false', json);
+      }
+    } else {
+      console.error('Fetch to /api/extract failed with status:', res.status);
+    }
+  } catch (error) {
+    console.error('Fetch to /api/extract failed or timed out:', error);
+  }
+
+  const updatedDeal: Deal = {
+    ...initialDeal,
+    status: 'Extracted',
+    ...extractionData,
+  };
+  
+  if ((extractionData as any).missing_information) {
+    updatedDeal.missing_information = (extractionData as any).missing_information;
+  }
+
+  saveKagazState({
+    ...state,
+    deals: [updatedDeal, ...state.deals],
+  });
+
+  syncDealToSupabase(updatedDeal.id);
+
+  return updatedDeal.id;
+}
+
+/**
  * Updates a draft deal details and its line items
  */
 export function updateDeal(dealId: string, updates: Partial<Deal>): Deal | null {

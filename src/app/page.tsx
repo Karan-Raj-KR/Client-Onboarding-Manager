@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Inbox, PlusCircle, CheckCircle2, AlertCircle, Clock, FileText, Loader2 } from 'lucide-react';
+import { ArrowRight, FilePlus, PlusCircle, CheckCircle2, AlertCircle, Clock, FileText, Loader2 } from 'lucide-react';
 import { useKagazStore, api, formatINRPaise } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
@@ -95,8 +95,8 @@ export default function Dashboard() {
             href="/inbox"
             className="inline-flex items-center justify-center px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-semibold rounded-full shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] hover:-translate-y-0.5 transition-all space-x-2"
           >
-            <Inbox className="w-4 h-4" />
-            <span>Open WhatsApp Inbox</span>
+            <FilePlus className="w-4 h-4" />
+            <span>New Enquiry</span>
             {newEnquiriesCount > 0 && (
               <span className="ml-2 bg-white text-neutral-900 text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
                 {newEnquiriesCount} New
@@ -110,10 +110,10 @@ export default function Dashboard() {
           <div className="glass rounded-2xl p-5 flex items-start space-x-4 animate-in slide-in-from-top-4 duration-700 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="p-2.5 bg-neutral-900 text-white rounded-xl shadow-lg relative z-10">
-              <Inbox className="w-5 h-5" />
+              <FilePlus className="w-5 h-5" />
             </div>
             <div className="flex-1 space-y-1.5 relative z-10">
-              <h4 className="font-bold text-sm text-foreground">New Hinglish Enquiry Received on WhatsApp!</h4>
+              <h4 className="font-bold text-sm text-foreground">New Demo Enquiry Received!</h4>
               <p className="text-xs text-muted-foreground font-medium">
                 Aditi Sharma has requested a restaurant website quote. Run the 90-second demo by clicking the button below.
               </p>
@@ -209,7 +209,7 @@ export default function Dashboard() {
                             href="/inbox"
                             className="inline-flex items-center px-4 py-2 border border-border shadow-sm text-xs font-bold rounded-full bg-white text-foreground hover:bg-neutral-50 hover:shadow-md transition-all active:scale-95"
                           >
-                            <span>Process in Inbox</span>
+                            <span>Process Enquiry</span>
                             <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                           </Link>
                         )}
