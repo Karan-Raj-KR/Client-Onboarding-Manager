@@ -62,7 +62,7 @@ export default function ClientAcceptPage() {
       try {
         await Promise.all(state.templates.map(async (tpl) => {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
           
           try {
             const res = await fetch('/api/tailor', {

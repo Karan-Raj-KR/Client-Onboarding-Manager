@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic';
 // Instantiate lazily so the client is only constructed when a request comes in, not during build.
 function getOpenAIClient() {
   return new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY,
+    baseURL: 'https://api.groq.com/openai/v1',
+    apiKey: process.env.GROQ_API_KEY,
   });
 }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.NVIDIA_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { ok: false, error: 'missing key' },
         { status: 500 }
@@ -46,7 +46,7 @@ ${JSON.stringify(deal, null, 2)}
 Rewrite the template above, fully tailored to this deal. Output only the final markdown document.`;
 
     const response = await openai.chat.completions.create({
-      model: 'meta/llama-3.3-70b-instruct',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userContent },

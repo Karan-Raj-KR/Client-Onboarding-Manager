@@ -11,24 +11,24 @@ function maskKey(key?: string) {
   return `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
 }
 
-async function testNvidia() {
-  console.log('\n--- 1. NVIDIA NIM ---');
-  const apiKey = process.env.NVIDIA_API_KEY;
+async function testGroq() {
+  console.log('\n--- 1. GROQ ---');
+  const apiKey = process.env.GROQ_API_KEY;
   console.log(`Key present: ${maskKey(apiKey)}`);
   
   if (!apiKey) {
-    console.log('❌ FAIL: Missing NVIDIA_API_KEY');
+    console.log('❌ FAIL: Missing GROQ_API_KEY');
     return;
   }
 
   try {
     const openai = new OpenAI({
-      baseURL: 'https://integrate.api.nvidia.com/v1',
+      baseURL: 'https://api.groq.com/openai/v1',
       apiKey,
       timeout: 10000, // 10 second timeout
     });
     const res = await openai.chat.completions.create({
-      model: 'meta/llama-3.3-70b-instruct',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: 'Say "hello world" in exactly 2 words.' }],
       max_tokens: 20,
     });
@@ -99,7 +99,7 @@ async function run() {
   console.log('Starting Diagnostic Checks...');
   await testSupabase();
   await testResend();
-  await testNvidia();
+  await testGroq();
   console.log('\nDiagnostic Checks Complete.');
 }
 

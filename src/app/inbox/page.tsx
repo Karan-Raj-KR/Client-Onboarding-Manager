@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, FileText, Upload, Loader2, MessageSquare, Mic, AlignLeft } from 'lucide-react';
+import { Sparkles, FileText, Upload, Loader2, MessageSquare, AlignLeft } from 'lucide-react';
 import { useKagazStore, processNewEnquiry } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
@@ -40,8 +40,8 @@ export default function InboxPage() {
   };
 
   const loadSample = () => {
-    setRawText('bhai restaurant ke liye website chahiye, online ordering bhi, budget 30-40k, kitne din?');
-    setSourceType('Raw text');
+    setRawText("bhai ek naya restaurant khol rahe hain hum 'Spice Route' naam se koramangala me. Hame ek badhiya website chahiye jisme online ordering bhi ho, whatsapp integration ke saath. Budget around 30k se 40k max hai. Kitne din lagenge banne me? jaldi start karna hai");
+    setSourceType('WhatsApp chat');
   };
 
   const handleAIProcess = async () => {
@@ -74,7 +74,6 @@ export default function InboxPage() {
     { id: 'Raw text', icon: AlignLeft },
     { id: 'Call/Meet transcript', icon: FileText },
     { id: 'WhatsApp chat', icon: MessageSquare },
-    { id: 'Voice note text', icon: Mic },
   ];
 
   return (
@@ -91,7 +90,7 @@ export default function InboxPage() {
             {/* Source Selector */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Source Type</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {sources.map((src) => {
                   const Icon = src.icon;
                   const isActive = sourceType === src.id;
