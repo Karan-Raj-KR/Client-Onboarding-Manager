@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Printer, CheckCircle, CreditCard, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Printer, CheckCircle, CreditCard, AlertCircle, ShieldCheck, Mail } from 'lucide-react';
 import { useKagazStore, simulatePayment, formatINRPaise, paiseToRupee } from '@/lib/store';
 import OwnerShell from '@/components/OwnerShell';
 
@@ -79,7 +79,7 @@ export default function InvoicePage() {
       if (res.ok) {
         alert('Email sent successfully!');
       } else {
-        alert('Failed to send email. Ensure you are using a verified Resend address (like your own email) on the free tier.');
+        alert('Failed to send email. Ensure Gmail credentials (GMAIL_USER, GMAIL_APP_PASSWORD) are configured in .env.local.');
       }
     } catch (e) {
       alert('Error sending email.');
@@ -132,7 +132,7 @@ export default function InvoicePage() {
               disabled={isSending}
               className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded-full transition-all shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
             >
-              <ArrowLeft className="w-4 h-4 rotate-135" /> {/* Use an icon or leave empty, reusing Arrow for now but let's just use text if no generic mail icon is imported */}
+              <Mail className="w-4 h-4" />
               <span>{isSending ? 'Sending...' : 'Email Client'}</span>
             </button>
 

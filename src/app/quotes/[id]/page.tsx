@@ -77,7 +77,7 @@ export default function QuotePreview() {
       if (res.ok) {
         alert('Email sent successfully!');
       } else {
-        alert('Failed to send email. Ensure you are using a verified Resend address (like your own email) on the free tier.');
+        alert('Failed to send email. Ensure Gmail credentials (GMAIL_USER, GMAIL_APP_PASSWORD) are configured in .env.local.');
       }
     } catch (e) {
       alert('Error sending email.');
