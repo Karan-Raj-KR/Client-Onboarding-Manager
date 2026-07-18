@@ -15,3 +15,5 @@ build/
 .env.local
 
 db.json
+.vercel
+.env*
